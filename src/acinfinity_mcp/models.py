@@ -710,7 +710,10 @@ class HistoryPoint(BaseModel):
         default_factory=dict, description="Applied power level 0-10 per port (from portSpead)."
     )
     automation_ports: list[int] = Field(
-        default_factory=list, description="Ports whose automation was triggering (portStatus bits)."
+        default_factory=list,
+        description="Ports flagged in `portStatus` (bit per port). On AI controllers the cloud "
+        "leaves this 0 almost always even while an Advance Automation drives the ports "
+        "(2 of 9653 rows set in 7 days); use port_power / get_event_log for AI activity.",
     )
     samples: int = Field(default=1, description="Raw 1-minute rows aggregated into this point.")
 

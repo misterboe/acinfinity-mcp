@@ -24,7 +24,7 @@ day. `pageNum` is ignored; `pageSize=2000` returns a whole day (1440 rows).
   (1440 rows/day at −90 d on this account, `validFrom 0`).
 - Per row: `temperature`/`humidity` (×100, onboard sensor on AI controllers = probe on standard
   ones), `vpdNums` (×100), `fTemperature` (°F ×100), `portSpead` (4-bit nibble per port, LSB = port 1,
-  applied level 0–10), `portStatus` (bit per port: automation triggered), `allSpead`, `dataStatus`,
+  applied level 0–10), `portStatus` (bit per port; the app calls it `portState` and uses it for the port trigger markers — on the AI+ it was non-zero in only 2 of 9653 rows over 7 days while an Advance Automation drove ports 1–3, so treat it as unreliable there), `allSpead`, `dataStatus`,
   `sensorDataBlock`, `devVersion`, and `sensors[]` with the same `sensorType/accessPort/sensorData/
   sensorPrecision` records as the live device list (so probe vs onboard history is separable).
   `thermal*`, `leafTemp*`, `internalSensor*`, `external*Sensor*`, `portDataBytes`,
