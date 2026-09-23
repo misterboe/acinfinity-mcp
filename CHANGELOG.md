@@ -16,3 +16,11 @@ All notable changes to this project are documented here. The format follows
   `sensorModeData` thresholds.
 - API documentation in `docs/api/` distilled from the Home Assistant integration, the
   ober37/ac-infinity-mcp quirk list and live captures.
+
+### Fixed
+- Automation rules with the 24/7 switch (`switchTime` bit 7) no longer report a time window;
+  a `schedule` summary states "24/7" or the effective days/window.
+- Automation temperature thresholds are merged into one °C entry; thresholds at their rail
+  are reported as `null` instead of 0 / 100 / 9.9.
+- `is_on` of a port now follows the applied power level, because AI controllers keep
+  `loadState 0` while an automation drives the port.

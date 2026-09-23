@@ -164,8 +164,10 @@ class Port(BaseModel):
     port: int = Field(description="1-based port number as printed on the controller.")
     name: str
     online: bool = Field(description="A UIS device is plugged in and responding.")
-    is_on: bool = Field(description="The connected device is currently powered.")
-    power: int = Field(ge=0, le=10, description="Current power level 0-10.")
+    is_on: bool = Field(
+        description="The connected device is currently running (power > 0 or loadState=1)."
+    )
+    power: int = Field(ge=0, le=10, description="Current power level 0-10 actually applied.")
     mode: Mode | int = Field(description="Active mode id (atType).")
     mode_name: str = Field(description="Human-readable mode, e.g. 'Off', 'Auto', 'VPD'.")
     load_type: int
@@ -288,12 +290,15 @@ def _climate_from_sensors(sensors: list[SensorReading], location: str) -> Climat
 def _decode_port(raw: dict[str, Any]) -> Port:
     remain = raw.get("remainTime")
     mode = raw.get("curMode") or Mode.OFF
+    power = raw.get("speak") or 0
     return Port(
         port=raw["port"],
         name=raw.get("portName") or f"Port {raw['port']}",
         online=raw.get("online") == 1,
-        is_on=raw.get("loadState") == 1,
-        power=raw.get("speak") or 0,
+        # loadState stays 0 on AI controllers while an Advance Automation drives the port,
+        # so the applied power level is the reliable signal (observed live 2026-09-23).
+        is_on=raw.get("loadState") == 1 or power > 0,
+        power=power,
         mode=mode,
         mode_name=mode_name(mode),
         load_type=raw.get("loadType") or 0,
@@ -414,19 +419,20 @@ _SENSOR_MODE_RECORD_LEN = 11
 
 
 class AutomationThreshold(BaseModel):
-    """One `sensorModeData` record of a new-framework Auto/VPD rule (11 ints per sensor).
+    """One sensor of a new-framework Auto/VPD rule, decoded from `sensorModeData`.
 
-    Layout is partially reverse-engineered: [0]=sensorType, [6]=low value, [8]=high value.
-    A value at its rail (temp 32 °F / 0 °C, humidity 0 or 100, VPD 0 or 9.9) means "not set".
-    Everything else is exposed raw until confirmed.
+    The record layout (11 ints per sensor) is partially reverse-engineered:
+    [0]=sensorType, [6]=low value, [8]=high value; a value at its rail (0 °C / 32 °F,
+    0 or 100 %, 0 or 9.9 kPa) means the trigger is not set and is reported as null.
+    Temperature is normalised to °C (the API stores a °F twin record).
     """
 
     sensor_kind: str
     sensor_location: str
     unit: str
-    low: float | None = Field(description="Tentative: record position 6, sensor units.")
-    high: float | None = Field(description="Tentative: record position 8, sensor units.")
-    raw: list[int]
+    low: float | None = Field(description="Turn on below this value; null = no low trigger.")
+    high: float | None = Field(description="Turn on above this value; null = no high trigger.")
+    raw: list[int] = Field(description="Undecoded 11-int record(s); positions 1-3 unknown.")
 
 
 class AutomationRule(BaseModel):
@@ -440,10 +446,16 @@ class AutomationRule(BaseModel):
     mode: str = Field(description="Off, On, Auto, Cycle, VPD or 'Unknown (n)'.")
     on_power: int = Field(ge=0, le=10)
     off_power: int = Field(ge=0, le=10)
-    window_start: str | None = Field(description="Daily start HH:MM (controller local time).")
-    window_end: str | None
-    days: list[str] = Field(description="Weekdays the window applies to.")
-    continuous: bool = Field(description="switchTime bit 7: the app treats the rule as 24/7.")
+    continuous: bool = Field(
+        description="True = the app's 24/7 switch is on: the rule applies at all times and "
+        "any stored time window/days are IGNORED. False = only within window/days."
+    )
+    schedule: str = Field(description="Human summary: '24/7' or 'Mon-Fri 09:00-17:00'.")
+    window_start: str | None = Field(
+        description="Daily start HH:MM (controller local time); null when continuous."
+    )
+    window_end: str | None = Field(description="Daily end HH:MM; null when continuous.")
+    days: list[str] = Field(description="Weekdays the window applies to; empty when continuous.")
     cycle_on_minutes: int | None = None
     cycle_off_minutes: int | None = None
     min_on_minutes: int | None = Field(default=None, description="onMinTime when isOnMinMaxTime=1.")
@@ -491,19 +503,43 @@ _LEGACY_TRIGGER_KEYS = (
 )
 
 
+_FAHRENHEIT_TYPES = frozenset(
+    {
+        SensorType.PROBE_TEMPERATURE_F,
+        SensorType.CONTROLLER_TEMPERATURE_F,
+        SensorType.HYDRO_WATER_TEMPERATURE_F,
+    }
+)
+# (low rail, high rail) per unit: a threshold parked at its rail is "not set".
+_THRESHOLD_RAILS: dict[str, tuple[float, float]] = {
+    "°C": (0, 90),
+    "%": (0, 100),
+    "kPa": (0, 9.9),
+    "ppm": (0, 9999),
+    "pH": (0, 14),
+}
+
+
+def _threshold_value(value: float, unit: str, *, high: bool) -> float | None:
+    low_rail, high_rail = _THRESHOLD_RAILS.get(unit, (None, None))
+    return None if value == (high_rail if high else low_rail) else value
+
+
 def _decode_threshold(record: list[int]) -> AutomationThreshold | None:
     if len(record) < _SENSOR_MODE_RECORD_LEN or record[0] not in _SENSOR_META:
         return None
     kind, unit, location = _SENSOR_META[record[0]]
-    scale = 10 if kind == "vpd" else 1
+    low, high = float(record[6]), float(record[8])
+    if kind == "vpd":
+        low, high = low / 10, high / 10
+    elif record[0] in _FAHRENHEIT_TYPES:
+        low, high = round((low - 32) * 5 / 9, 1), round((high - 32) * 5 / 9, 1)
     return AutomationThreshold(
         sensor_kind=kind,
         sensor_location=location,
-        unit="°F"
-        if record[0] in (SensorType.PROBE_TEMPERATURE_F, SensorType.CONTROLLER_TEMPERATURE_F)
-        else unit,
-        low=record[6] / scale,
-        high=record[8] / scale,
+        unit=unit,
+        low=_threshold_value(low, unit, high=False),
+        high=_threshold_value(high, unit, high=True),
         raw=list(record),
     )
 
@@ -519,7 +555,38 @@ def _decode_sensor_mode_data(raw: Any) -> list[AutomationThreshold]:
         values[i : i + _SENSOR_MODE_RECORD_LEN]
         for i in range(0, len(values), _SENSOR_MODE_RECORD_LEN)
     ]
-    return [t for t in (_decode_threshold(r) for r in records) if t]
+    # The API stores temperature twice (°F and °C record); merge them into one °C entry,
+    # preferring the °C record's values and keeping both raw records for later decoding.
+    merged: dict[tuple[str, str], AutomationThreshold] = {}
+    for record in records:
+        t = _decode_threshold(record)
+        if t is None:
+            continue
+        key = (t.sensor_location, t.sensor_kind)
+        if key in merged:
+            existing = merged[key]
+            if record[0] in _FAHRENHEIT_TYPES:
+                existing.raw.extend(t.raw)
+            else:
+                t.raw = existing.raw + t.raw
+                merged[key] = t
+        else:
+            merged[key] = t
+    return list(merged.values())
+
+
+def _schedule_summary(days: list[str], start: str | None, end: str | None) -> str:
+    if not days or start is None or end is None:
+        return "never (no days or window)"
+    if len(days) == 7:
+        day_part = "daily"
+    elif days == list(_DAY_NAMES[:5]):
+        day_part = "Mon-Fri"
+    elif days == list(_DAY_NAMES[5:]):
+        day_part = "Sat-Sun"
+    else:
+        day_part = ",".join(days)
+    return f"{day_part} {start}-{end}"
 
 
 def decode_automation_rule(raw: dict[str, Any], *, is_ai: bool) -> AutomationRule:
@@ -527,6 +594,7 @@ def decode_automation_rule(raw: dict[str, Any], *, is_ai: bool) -> AutomationRul
     mode_id = raw.get("currentMode")
     mode = table.get(mode_id, f"Unknown ({mode_id})")
     days, continuous = _days_from_switch_time(raw.get("switchTime"))
+    start, end = _minutes_to_hhmm(raw.get("beginTime")), _minutes_to_hhmm(raw.get("endTime"))
     legacy = {
         key: raw.get(key) for key, rail in _LEGACY_TRIGGER_KEYS if raw.get(key) not in (None, rail)
     }
@@ -539,10 +607,13 @@ def decode_automation_rule(raw: dict[str, Any], *, is_ai: bool) -> AutomationRul
         mode=mode,
         on_power=raw.get("onSpeed") or 0,
         off_power=raw.get("offSpeed") or 0,
-        window_start=_minutes_to_hhmm(raw.get("beginTime")),
-        window_end=_minutes_to_hhmm(raw.get("endTime")),
-        days=days,
         continuous=continuous,
+        # With the 24/7 switch on, the app ignores the stored window entirely — hide it so
+        # nobody reports "runs 09:00-17:00" for a rule that runs all day.
+        schedule="24/7" if continuous else _schedule_summary(days, start, end),
+        window_start=None if continuous else start,
+        window_end=None if continuous else end,
+        days=[] if continuous else days,
         cycle_on_minutes=(raw.get("cycleOn") or 0) // 60 if mode == "Cycle" else None,
         cycle_off_minutes=(raw.get("cycleOff") or 0) // 60 if mode == "Cycle" else None,
         min_on_minutes=raw.get("onMinTime") if raw.get("isOnMinMaxTime") == 1 else None,

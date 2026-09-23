@@ -76,14 +76,22 @@ Writing the wrong table energises equipment. `models.py` keys the table on `is_a
   | 0 | `sensorType` (0 probe °F, 1 probe °C, 2 probe humidity, 3 probe VPD …) | matches sensor table |
   | 6 | low threshold | 32 °F / 0 °C / 0 % / 15 (=1.5 kPa) |
   | 8 | high threshold | 77 °F = 25 °C / 100 % (rail) / 99 (rail) |
-  | 1,2,3 | unknown (13/12/47, 5/10, 2/1/0) — maybe hysteresis, speed range, switch bits | open |
+  | 3 | probably which triggers are enabled (`1` where exactly one non-rail threshold exists, `0` for the all-rail humidity record, `2` on the °F twin) | hypothesis |
+  | 1, 2 | unknown (`13/12/47`, `5/10`) — maybe hysteresis/buffer and a speed bound | open |
 
-  Verify against the app before trusting positions other than 0/6/8.
+  Temperature is stored twice (a °F record and a °C record with the same meaning); the server
+  merges them into one °C entry. Rails are reported as `null` ("not set"). Confirmed against the
+  app on 2026-09-23: port 1 Auto = high 25 °C only, port 3 VPD = low 1.5 kPa only.
 
 ### Other fields
 
 - `beginTime`/`endTime` minutes from midnight; `switchTime` day bitmask (`127` all days,
-  `255` = all days + continuous, `31` weekdays, `96` weekends).
+  `255` = all days + continuous, `31` weekdays, `96` weekends). **When bit 7 (continuous, the
+  app's "24 h" switch) is set, the stored window is ignored** — the rule applies all day. The
+  user's live program stores 09:00–17:00 with `switchTime 255` and runs 24/7 (confirmed in the
+  app). Never report the window for a continuous rule.
+- Ports driven by a program keep `loadState 0` in `devInfoListAll` even while running (`speak` > 0);
+  use `speak` to tell whether the device is on.
 - `cycleOn`/`cycleOff` in seconds (app shows minutes).
 - `isOnMinMaxTime`/`onMinTime`/`onMaxTime`: minimum/maximum run time in minutes.
 - `portType`: device identity, exposed by no read endpoint; copy from existing rules on writes.

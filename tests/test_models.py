@@ -17,6 +17,14 @@ def test_decode_standard_controller_offline_readings_are_none():
     assert ctl.ports[0].mode == Mode.VPD
 
 
+def test_port_is_on_follows_applied_power_under_automation():
+    ai = next(c for c in load("devInfoListAll") if c["devId"] == AI_ID)
+    ports = {p.port: p for p in decode_controller(ai).ports}
+    # AI+ ports driven by an Advance Automation report loadState 0 but speak > 0
+    assert ports[1].power == 2 and ports[1].is_on is True
+    assert ports[5].power == 0 and ports[5].is_on is False
+
+
 def test_decode_ai_controller_sensors():
     ai = next(c for c in load("devInfoListAll") if c["devId"] == AI_ID)
     ctl = decode_controller(ai)
@@ -83,22 +91,31 @@ def test_decode_ai_automations():
     ]
     rule = result.rules[0]
     assert rule.enabled and rule.running
-    assert (rule.window_start, rule.window_end) == ("09:00", "17:00")
-    assert rule.continuous and len(rule.days) == 7
+    # switchTime 255 = 24/7 switch on -> the stored 09:00-17:00 window is ignored
+    assert rule.continuous and rule.schedule == "24/7"
+    assert rule.window_start is None and rule.window_end is None and rule.days == []
     assert rule.min_on_minutes == 5
-    kinds = [(t.sensor_kind, t.unit, t.low, t.high) for t in rule.thresholds]
-    assert ("temperature", "°C", 0.0, 25.0) in kinds
-    assert ("humidity", "%", 0.0, 100.0) in kinds
+    # °F and °C records merged into one °C entry; rails (0 °C / 0-100 %) become null
+    by_kind = {t.sensor_kind: t for t in rule.thresholds}
+    assert set(by_kind) == {"temperature", "humidity"}
+    assert (
+        by_kind["temperature"].unit,
+        by_kind["temperature"].low,
+        by_kind["temperature"].high,
+    ) == ("°C", None, 25.0)
+    assert len(by_kind["temperature"].raw) == 22
+    assert (by_kind["humidity"].low, by_kind["humidity"].high) == (None, None)
     vpd = result.rules[2].thresholds[0]
-    assert (vpd.sensor_kind, vpd.low, vpd.high) == ("vpd", 1.5, 9.9)
+    assert (vpd.sensor_kind, vpd.low, vpd.high) == ("vpd", 1.5, None)
 
 
 def test_legacy_automation_mode_table_is_inverted():
     from acinfinity_mcp.models import decode_automation_rule
 
     raw = {"advId": 1, "advName": "x", "currentMode": 2, "grouptDevType": 8, "switchTime": 31}
+    raw.update({"beginTime": 540, "endTime": 1020})
     legacy = decode_automation_rule(raw, is_ai=False)
     ai = decode_automation_rule(raw, is_ai=True)
     assert (legacy.mode, ai.mode) == ("Off", "On")
     assert legacy.ports == [4] and legacy.days == ["Mon", "Tue", "Wed", "Thu", "Fri"]
-    assert legacy.continuous is False
+    assert legacy.continuous is False and legacy.schedule == "Mon-Fri 09:00-17:00"

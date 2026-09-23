@@ -191,11 +191,15 @@ async def list_automations(ctx: Context[AppState], controller_id: ControllerId) 
     """List the Advance Automation programs of a controller (the app's "Automations" tab).
 
     A program is a named set of rules; each rule governs one or more ports with a mode
-    (On/Off/Auto/Cycle/VPD), on/off power, a daily time window and, for Auto/VPD, sensor
-    thresholds. These rules override the per-port mode from get_port_settings while they
-    run — on AI controllers this is where the real configuration lives. Thresholds of
-    AI-controller rules come from a partially decoded structure; treat low/high as tentative
-    and mention that when reporting them.
+    (On/Off/Auto/Cycle/VPD), on/off power, a schedule and, for Auto/VPD, sensor thresholds.
+    These rules override the per-port mode from get_port_settings while they run — on AI
+    controllers this is where the real configuration lives.
+
+    Use `schedule`/`continuous` for when a rule applies: `continuous=true` means the app's
+    24/7 switch is on and the rule runs at all times (window/days are then null/empty).
+    Thresholds: `low`/`high` are null when that trigger is not set; the underlying record
+    is only partially reverse-engineered (see `raw`), so report values as decoded from the
+    device rather than as guaranteed.
     """
     client = _client(ctx)
     is_ai, _ = await _call(client.describe(controller_id))
