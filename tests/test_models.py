@@ -190,3 +190,31 @@ def test_legacy_automation_mode_table_is_inverted():
     assert (legacy.mode, ai.mode) == ("Off", "On")
     assert legacy.ports == [4] and legacy.days == ["Mon", "Tue", "Wed", "Thu", "Fri"]
     assert legacy.continuous is False and legacy.schedule == "Mon-Fri 09:00-17:00"
+
+
+def test_history_aggregation_keeps_short_cycles_visible():
+    from acinfinity_mcp.models import decode_history
+
+    # 15 one-minute rows: port 3 runs at level 1 for minutes 5-7 only (portSpead nibble 3 = 0x100)
+    rows = [
+        {
+            "createTime": 1800 + 60 * i,
+            "temperature": 2500,
+            "humidity": 5000,
+            "vpdNums": 150,
+            "portSpead": 0x100 if 5 <= i <= 7 else 0,
+            "portStatus": 0,
+        }
+        for i in range(15)
+    ]
+    series = decode_history("x", rows, port_count=3, start=1800, end=2700, sample_minutes=15)
+    (point,) = series.points
+    assert point.ports[3].on_minutes == 3 and point.ports[3].max_power == 1
+    assert point.ports[3].avg_power == 0.2  # the mean alone would round to 0
+    assert series.summary["port_3"] == {
+        "on_minutes": 3,
+        "duty_pct": 20.0,
+        "avg_power": 0.2,
+        "max_power": 1,
+        "runs": 1,
+    }

@@ -246,10 +246,13 @@ async def get_history(
     ] = None,
 ) -> HistorySeries:
     """Sensor and port history: tent climate (probe), ambient climate (onboard sensor, AI
-    controllers), applied power per port and automation-trigger flags, averaged into
-    `sample_minutes` buckets, plus min/avg/max. The cloud keeps 1-minute rows for months;
-    each 24 h costs one API call, so keep hours x resolution reasonable (24 h @ 15 min = 96
-    points). Timestamps are unix seconds; convert with the controller's `timezone`.
+    controllers) and per-port activity, aggregated into `sample_minutes` buckets, plus a
+    summary with min/avg/max per climate series and on-minutes / duty cycle / run count per
+    port. Devices that cycle briefly (dehumidifier 3 min every 7 min) show up in
+    `ports[n].on_minutes` and `max_power` even in 15- or 60-minute buckets — never judge
+    activity from `avg_power` alone; use `sample_minutes=1` to see individual runs. The cloud
+    keeps 1-minute rows for months; each 24 h costs one API call. Timestamps are unix
+    seconds; convert with the controller's `timezone`.
     """
     import time as _time
 

@@ -700,20 +700,28 @@ def decode_automations(
 # ------------------------------------------------------------------------- History & logs
 
 
+class PortActivity(BaseModel):
+    avg_power: float = Field(description="Mean applied level 0-10 over the bucket (float).")
+    max_power: int = Field(description="Highest level seen in the bucket.")
+    on_minutes: int = Field(description="Minutes in the bucket with level > 0.")
+
+
 class HistoryPoint(BaseModel):
     time: int = Field(description="Unix timestamp (seconds) of the sample.")
     tent: Climate | None = Field(default=None, description="Probe climate (inside the tent).")
     ambient: Climate | None = Field(
         default=None, description="Onboard-sensor climate (controller housing); AI controllers."
     )
-    port_power: dict[int, int] = Field(
-        default_factory=dict, description="Applied power level 0-10 per port (from portSpead)."
+    ports: dict[int, PortActivity] = Field(
+        default_factory=dict,
+        description="Per port: avg/max level and on-minutes in this bucket (from portSpead). "
+        "Short cycles survive aggregation via on_minutes/max_power; avg alone hides them.",
     )
     automation_ports: list[int] = Field(
         default_factory=list,
         description="Ports flagged in `portStatus` (bit per port). On AI controllers the cloud "
         "leaves this 0 almost always even while an Advance Automation drives the ports "
-        "(2 of 9653 rows set in 7 days); use port_power / get_event_log for AI activity.",
+        "(2 of 9653 rows set in 7 days); use ports[n] / get_event_log for AI activity.",
     )
     samples: int = Field(default=1, description="Raw 1-minute rows aggregated into this point.")
 
@@ -726,7 +734,8 @@ class HistorySeries(BaseModel):
     raw_rows: int = Field(description="1-minute rows fetched from the API before aggregation.")
     points: list[HistoryPoint]
     summary: dict[str, dict[str, float]] = Field(
-        description="min/avg/max per series (tent_temperature_c, tent_humidity_pct, ...)."
+        description="min/avg/max per climate series (tent_temperature_c, ...) and per port "
+        "`port_<n>`: on_minutes, duty_pct, avg_power, max_power, runs (on-off cycles)."
     )
 
 
@@ -744,11 +753,15 @@ def _decode_history_row(row: dict[str, Any], port_count: int) -> HistoryPoint:
         ambient = None
     speads = int(row.get("portSpead") or 0)
     status = int(row.get("portStatus") or 0)
+    levels = {p: (speads >> (4 * (p - 1))) & 0xF for p in range(1, port_count + 1)}
     return HistoryPoint(
         time=int(row["createTime"]),
         tent=tent,
         ambient=ambient,
-        port_power={p: (speads >> (4 * (p - 1))) & 0xF for p in range(1, port_count + 1)},
+        ports={
+            p: PortActivity(avg_power=float(lv), max_power=lv, on_minutes=int(lv > 0))
+            for p, lv in levels.items()
+        },
         automation_ports=[p for p in range(1, port_count + 1) if status & (1 << (p - 1))],
     )
 
@@ -768,14 +781,21 @@ def _aggregate(points: list[HistoryPoint]) -> HistoryPoint:
             vpd_kpa=_mean([c.vpd_kpa for c in cs if c.vpd_kpa is not None]),
         )
 
-    ports = sorted({p for pt in points for p in pt.port_power})
+    ports = sorted({p for pt in points for p in pt.ports})
+
+    def activity(port: int) -> PortActivity:
+        acts = [pt.ports[port] for pt in points if port in pt.ports]
+        return PortActivity(
+            avg_power=_mean([a.avg_power for a in acts]) or 0.0,
+            max_power=max(a.max_power for a in acts),
+            on_minutes=sum(a.on_minutes for a in acts),
+        )
+
     return HistoryPoint(
         time=points[0].time,
         tent=clim("tent"),
         ambient=clim("ambient"),
-        port_power={
-            p: round(_mean([pt.port_power.get(p, 0) for pt in points]) or 0) for p in ports
-        },
+        ports={p: activity(p) for p in ports},
         automation_ports=sorted({p for pt in points for p in pt.automation_ports}),
         samples=len(points),
     )
@@ -812,6 +832,17 @@ def decode_history(
                     "avg": _mean(values) or 0,
                     "max": max(values),
                 }
+    for port in sorted({p for pt in raw for p in pt.ports}):
+        levels = [pt.ports[port].max_power for pt in raw if port in pt.ports]
+        runs = sum(1 for i, lv in enumerate(levels) if lv > 0 and (i == 0 or levels[i - 1] == 0))
+        on = sum(1 for lv in levels if lv > 0)
+        summary[f"port_{port}"] = {
+            "on_minutes": on,
+            "duty_pct": round(100 * on / len(levels), 1) if levels else 0.0,
+            "avg_power": _mean([float(lv) for lv in levels]) or 0.0,
+            "max_power": max(levels) if levels else 0,
+            "runs": runs,
+        }
     return HistorySeries(
         controller_id=controller_id,
         start=start,

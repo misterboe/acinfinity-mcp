@@ -180,8 +180,11 @@ async def test_get_history_aggregates_and_summarises(connect: Connect):
     assert data["raw_rows"] == 5 and 1 <= len(data["points"]) <= 2
     point = data["points"][0]
     assert point["tent"]["temperature_c"] and point["ambient"]["temperature_c"]
-    assert point["port_power"]["1"] == 3 and point["port_power"]["2"] == 6  # portSpead 0x63 nibbles
+    assert point["ports"]["1"]["max_power"] == 3 and point["ports"]["2"]["max_power"] == 6  # 0x63
+    assert point["ports"]["1"]["on_minutes"] == point["samples"]
     assert "tent_temperature_c" in data["summary"] and data["summary"]["tent_vpd_kpa"]["max"] > 1
+    assert data["summary"]["port_2"]["duty_pct"] == 100.0 and data["summary"]["port_2"]["runs"] == 1
+    assert data["summary"]["port_8"]["on_minutes"] == 0 and data["summary"]["port_8"]["runs"] == 0
 
 
 async def test_get_event_log_decodes_ai_actions(connect: Connect, api: FakeApi):

@@ -27,6 +27,12 @@ All notable changes to this project are documented here. The format follows
 - Standard-controller writes carry the app's request signature (`sign`/`requestId`/`version`
   headers, algorithm from the decompiled Android app via Backroads4Me's fork).
 
+### Fixed (history)
+- Aggregated buckets reported a rounded mean power per port, which erased short device
+  cycles (a 3-minute dehumidifier run in a 15-minute bucket became 0). Each port now carries
+  `avg_power` (float), `max_power` and `on_minutes`, and the summary adds per-port
+  on-minutes, duty cycle and run count.
+
 ### Added (history)
 - `get_history`: 1-minute sensor/port history from `log/dataPage` (tent + ambient climate,
   per-port power from the `portSpead` nibbles, automation flags), fetched in 24 h windows with
