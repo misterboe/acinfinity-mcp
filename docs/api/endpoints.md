@@ -42,6 +42,37 @@ last `createTime`). Observed on the AI+ (2026-09-23), one row per ~5 min:
 The `sensors[]` array carries the same per-sensor records as the live device list, so probe vs
 onboard history can be separated. `/api/log/logdataByAll` answers `500` on this account.
 
+## Endpoint census (2026-09-23)
+
+Every public client that talks to `acinfinityserver.com` was cloned and grepped for API paths
+(GitHub code search for `acinfinityserver`, `devInfoListAll`, `getdevModeSettingList`,
+`appPasswordl`: dalinicus & Backroads4Me HA integrations, ober37/ac-infinity-mcp,
+keithah/homebridge-acinfinity, i8beef/I8Beef.ACInfinity, awysocki/ACInfinity,
+kornpow/ac-infinity-api, jakobgoerke/ac-infinity-client, ToBee94/ac-infinity-php,
+LukeEvansTech/acinfinity-exporter + fansync, dwot/isley + ACScraper, sinister-labs/growpanion,
+bselee/enviroflow.app). The union of AC Infinity paths they use:
+
+| Path | Used by | Status here |
+|------|---------|-------------|
+| `/api/user/appUserLogin` | all | ✅ |
+| `/api/user/devInfoListAll` | all | ✅ |
+| `/api/dev/getdevModeSettingList` | all | ✅ |
+| `/api/dev/addDevMode` | HA, ober37, homebridge, i8beef, php, ts | ✅ verified live (AI) |
+| `/api/dev/modeAndSetting` | HA, ober37 | ✅ minimal PUT verified live |
+| `/api/dev/getDevSetting` / `updateAdvSetting` | HA, ober37 | ✅ read / ⚠️ write standard only |
+| `/api/dev/ml/secFuc` | HA Bruno | ✅ read |
+| `/api/log/dataPage` | ober37, exporter, isley | ✅ read |
+| `/api/log/logdataByAll`, `DELETE /api/log/log` | ober37 | ✗ 500 here / not tried (destructive) |
+| `/api/version=2.0/dev/getGroups` … `delByid` | ober37 | ✅ read, edit, toggle / create+delete not wired |
+| `/api/version=2.0/dev/getAlarms` … `delAlarmsByid` | ober37 | ✅ read / writes not wired |
+| `/api/version=2.0/dev/recipe` | ober37 | ✅ read (3 `advVersion` variants) |
+| `/api/upgrade/getUpgrade` | ober37 | ✅ read: `POST fFamily=<devType>&firmwareVersion=&hardwareVersion=` → `{"msg":"No Entity","data":{"iosSupportVersion":"2.0.7","iosSupportMax":"2.9.9","androidSupportVersion":"2.0.6","androidSupportMax":"2.9.9"}}` when no firmware update exists |
+| `/api/upgrade/downgrade` | ober37 | not tried (needs `devMacAddr`; returns a firmware download URL) |
+
+No public client knows more than this list. Everything beyond it (sharing, notifications,
+plant/log features, the `sensorDataBlock`/thermal fields) requires the app binary — see the
+"How to find more" note in [README.md](README.md).
+
 **`minversion: 3.5` header rewrites the route to `/api/3.5/…`** (visible in 404 bodies). On
 `getdevModeSettingList` it adds `standardMode`, `devAdvGroups`, `insideTemp`/`outsideTemp`,
 `isAdvTempTrigger` and fills `sensorSettingStr`/`sensorTransBuffStr`; other values (4.0 … 10.0)

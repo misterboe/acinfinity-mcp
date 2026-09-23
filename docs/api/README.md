@@ -20,6 +20,22 @@ Further reverse-engineering references: [ober37/ac-infinity-mcp](https://github.
 (`docs/API.md`, 39 documented quirks incl. v2 automation writes) and
 [keithah/homebridge-acinfinity](https://github.com/keithah/homebridge-acinfinity/blob/master/API_REFERENCE.md).
 
+## How to find more
+
+Two proven ways to discover endpoints and field semantics beyond what is documented here:
+
+1. **Decompile the Android app** (`com.eternal.acinfinity`, Play Store version 2.0.9 as of
+   2026-09-23) with [jadx](https://github.com/skylot/jadx): the Retrofit interfaces list every
+   path with their `@Query`/`@Field` names, the request-signing code lives in `TokenManager`,
+   and the `sensorModeData` layout in the model classes. Backroads4Me's HA fork was derived this way.
+2. **Capture the app's traffic** (Proxyman/Charles/mitmproxy on the phone — the app does not pin
+   certificates, ober37 and keithah captured iOS 1.9.x this way): change one setting in the app,
+   diff the request against the read-back. This is how the field-group ids of `modeAndSetting`
+   and the v2 automation bodies were found.
+
+Probing paths blindly does not work: ober37 tried 200+ legacy-path variants and found nothing;
+the v2 surface only became visible through captures.
+
 ## Compatibility
 
 Only Wi‑Fi controllers that sync to the UIS cloud: Controller 69 Wifi, 69 Pro, 69 Pro+, AI+, Outlet AI / AI+.
