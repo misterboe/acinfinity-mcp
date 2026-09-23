@@ -8,10 +8,10 @@ See [connection.md](connection.md).
 | 1 | POST | `/api/user/appUserLogin` | login → token | all |
 | 2 | POST | `/api/user/devInfoListAll` | list controllers incl. ports, sensors, current readings | all |
 | 3 | POST | `/api/dev/getdevModeSettingList` | mode/trigger settings + advanced settings for one port | all |
-| 4 | POST | `/api/dev/addDevMode` | write mode/trigger settings for one port | standard |
-| 5 | POST | `/api/dev/getDevSetting` | advanced settings for one port (port 0 = controller) | standard |
-| 6 | POST | `/api/dev/updateAdvSetting` | write advanced settings | standard |
-| 7 | PUT | `/api/dev/modeAndSetting` | write controls **and** settings in one call | AI |
+| 4 | POST | `/api/dev/addDevMode` | write mode/trigger settings for one port (form body; AI needs `minversion`) | all |
+| 5 | POST | `/api/dev/getDevSetting` | advanced settings for one port (port 0 = controller) | all |
+| 6 | POST | `/api/dev/updateAdvSetting` | write advanced settings (signed, form body) | standard |
+| 7 | PUT | `/api/dev/modeAndSetting` | app-native AI write: `atType` + field groups (`modeAndSettingIdStr`) + their values | AI |
 | 8 | GET | `/api/dev/ml/secFuc?devId=` | per-port `secFuc*` + `portParamData` (works **without** `minversion`; 404 with it) | AI |
 | 9 | POST | `/api/version=2.0/dev/getGroups` | Advance Automation rules — see [automations.md](automations.md) | all |
 | 10 | POST | `/api/version=2.0/dev/getAlarms` | alarm definitions | all |
@@ -116,15 +116,19 @@ devId=<controllerId>&port=<0..n>
 `devSetting` object containing the advanced settings. Port `0` returns controller-level settings. Full key list in
 [controls-and-settings.md](controls-and-settings.md), fixture in the same file.
 
-## 4. Write mode settings (standard controllers)
+## 4. Write mode settings (both families)
 
 ```
-POST /api/dev/addDevMode?<all DeviceControlKey fields url-encoded>
-(empty body)
+POST /api/dev/addDevMode
+Content-Type: application/x-www-form-urlencoded
+<all CONTROL_KEYS fields>            # AI: header minversion: 3.5   standard: sign headers
 ```
 
-The full control object from endpoint 3 (minus `devSetting`) goes into the **query string**, with the changed
+The full control object from endpoint 3 (minus `devSetting`) goes into the **form body**, with the changed
 keys overlaid. Value serialisation: `None → 0`, `bool → "true"/"false"`, `dict/list → json.dumps(...)`.
+Verified live on an AI+ (2026-09-23). The query-string variant the old HA client used returns `100001`
+on AI controllers and is silently discarded on standard ones (HA issue #157). Fields that do not belong
+to the written `atType` are discarded with `200` — send a mode's parameters together with that mode.
 
 ## 5. Advanced settings for a port (standard controllers)
 
@@ -139,24 +143,27 @@ settings (temp unit, calibration, display), port n = per-device settings (load t
 ## 6. Write advanced settings (standard controllers)
 
 ```
-POST /api/dev/updateAdvSetting?<all AdvancedSettingsKey fields url-encoded>&devName=<name>
-(empty body)
+POST /api/dev/updateAdvSetting
+<all SETTING_KEYS fields>&devName=<current name>     # form body + sign headers (connection.md)
 ```
 
 Same read-modify-write pattern with the `getDevSetting` result. `devName` **must** be set to the current controller
-name (port 0) or port name (port n) or the call fails / renames the device. AI controllers do not support this endpoint
-for controller-level settings (HA raises `NotImplementedError`).
+name (port 0) or port name (port n) or the device is renamed. On AI controllers the endpoint answers
+`999999 Operation failed` (with `minversion` it 404s) — use the minimal `modeAndSetting` PUT there.
 
 ## 7. Write controls + settings (AI controllers)
 
 ```
-PUT /api/dev/modeAndSetting?<all ModeAndSettingKeys fields url-encoded>&modeAndSettingIdStr=[...]
+PUT /api/dev/modeAndSetting?devId=…&port=…&atType=<n>&modeAndSettingIdStr=[16,…]&<fields of the listed groups>
 Header: minversion: 3.5
 (empty body)
 ```
 
-Source object: endpoint 3 result, with `devSetting` **flattened into the top level** (`{**devSetting, **result}` —
-top-level wins on conflicts). Overlay changed keys, then set `modeAndSettingIdStr` according to the resulting `atType`:
+This is how the app writes AI controllers (HA Bruno captures, verified live): **only** the changed field
+groups travel, identified by `modeAndSettingIdStr`; see [controls-and-settings.md](controls-and-settings.md)
+for the group-id table and the "send the whole group" rule. The HA integration's full-object variant
+(`{**devSetting, **result}` flattened) is accepted with `200` but **must not be used** — it renamed a port
+to "0" in a live test because `devSetting.devName` is null on AI controllers. Group ids per `atType`:
 
 | `atType` | `modeAndSettingIdStr` |
 |----------|-----------------------|
