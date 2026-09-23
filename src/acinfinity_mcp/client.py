@@ -489,37 +489,47 @@ class AcInfinityClient:
     async def update_port_controls(
         self, controller_id: str, port: int, changes: dict[str, Any]
     ) -> None:
-        """Read-modify-write of mode/trigger controls for one port (family-aware)."""
+        """Read-modify-write of mode/trigger controls for one port.
+
+        Both families use `addDevMode` with the full control object as form body. AI
+        controllers additionally need the `minversion: 3.5` header — without it the API answers
+        `100001`; with a query-string payload the standard family answers 200 but discards the
+        write (ober37 Quirks 13/14). Verified live on an AI+ 2026-09-23 (Timer-to-On round trip).
+        """
         await self.validate_port(controller_id, port)
         is_ai, _ = await self.describe(controller_id)
         async with self._lock:
-            if is_ai:
-                await self._write_ai(controller_id, port, changes)
-            else:
-                existing = await self._get_port_settings(controller_id, port)
-                payload = _serialise(CONTROL_KEYS, changes, existing)
-                await self._authed("POST", f"{PATH_ADD_DEV_MODE}?{urlencode(payload)}")
+            existing = await self._get_port_settings(controller_id, port)
+            payload = _serialise(CONTROL_KEYS, changes, existing)
+            await self._authed("POST", PATH_ADD_DEV_MODE, data=payload, min_version=is_ai)
             self._device_cache = None
 
     async def update_device_settings(
         self, controller_id: str, port: int, device_name: str, changes: dict[str, Any]
     ) -> None:
-        """Read-modify-write of advanced settings (port 0 = controller); standard family only."""
+        """Read-modify-write of advanced settings (port 0 = controller).
+
+        Standard family: `updateAdvSetting` (form body, HA-verified). AI family: the combined
+        `modeAndSetting` PUT (accepted with 200 in a live no-op test; persistence of setting
+        keys not yet verified).
+        """
         await self.validate_port(controller_id, port, allow_zero=True)
         is_ai, _ = await self.describe(controller_id)
         async with self._lock:
             if is_ai:
-                await self._write_ai(controller_id, port, changes)
+                await self._write_ai_mode_and_setting(controller_id, port, changes)
                 return
             body = await self._authed(
                 "POST", PATH_DEV_SETTING, data={"devId": controller_id, "port": port}
             )
             payload = _serialise(SETTING_KEYS, changes, body["data"])
             payload["devName"] = device_name
-            await self._authed("POST", f"{PATH_UPDATE_ADV_SETTING}?{urlencode(payload)}")
+            await self._authed("POST", PATH_UPDATE_ADV_SETTING, data=payload)
             self._device_cache = None
 
-    async def _write_ai(self, controller_id: str, port: int, changes: dict[str, Any]) -> None:
+    async def _write_ai_mode_and_setting(
+        self, controller_id: str, port: int, changes: dict[str, Any]
+    ) -> None:
         existing = await self._get_port_settings(controller_id, port)
         flattened = dict(existing.get("devSetting") or {})
         flattened.update(existing)

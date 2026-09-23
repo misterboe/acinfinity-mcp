@@ -42,14 +42,16 @@ async def test_transient_http_error_is_retried(client, api, monkeypatch):
     assert [p for _, p, _, _ in api.calls].count(PATH_DEVICE_LIST) == 2
 
 
-async def test_standard_write_is_full_object_in_query_string(client, api):
+async def test_standard_write_is_full_object_form_body(client, api):
     await client.update_port_controls(STD_ID, 1, {"atType": 2, "onSpead": 7})
-    (query,) = api.writes(PATH_ADD_DEV_MODE)
-    assert query["atType"] == "2" and query["onSpead"] == "7"
-    assert set(CONTROL_KEYS) <= set(query)  # every key sent, even ones the API omitted
-    assert query["restore"] == "false"  # bool → "false"
-    assert query["insideTemp"] == "0"  # missing → 0
-    assert "devSetting" not in query
+    (form,) = api.writes(PATH_ADD_DEV_MODE)
+    assert form["atType"] == "2" and form["onSpead"] == "7"
+    assert set(CONTROL_KEYS) <= set(form)  # every key sent, even ones the API omitted
+    assert form["restore"] == "false"  # bool → "false"
+    assert form["insideTemp"] == "0"  # missing → 0
+    assert "devSetting" not in form
+    method, _, _, _ = next(c for c in api.calls if c[1] == PATH_ADD_DEV_MODE)
+    assert method == "POST"
 
 
 async def test_standard_settings_write_keeps_device_name(client, api):
@@ -58,12 +60,18 @@ async def test_standard_settings_write_keeps_device_name(client, api):
     assert query["devName"] == "Lüftung" and query["loadType"] == "6"
 
 
-async def test_ai_write_uses_put_mode_and_setting(client, api):
-    await client.update_port_controls(AI_ID, 1, {"atType": 8})
-    assert api.writes(PATH_ADD_DEV_MODE) == []
+async def test_ai_control_write_uses_add_dev_mode_with_minversion(client, api):
+    await client.update_port_controls(AI_ID, 1, {"atType": 4, "acitveTimerOn": 86400})
+    (form,) = api.writes(PATH_ADD_DEV_MODE)
+    assert form["atType"] == "4" and form["acitveTimerOn"] == "86400"
+    assert api.writes(PATH_MODE_AND_SETTING) == []
+
+
+async def test_ai_settings_write_uses_put_mode_and_setting(client, api):
+    await client.update_device_settings(AI_ID, 1, "Abluft", {"loadType": 129})
     (query,) = api.writes(PATH_MODE_AND_SETTING)
-    assert query["atType"] == "8"
-    assert query["modeAndSettingIdStr"] == "[16,81,32,98,99]"
+    assert query["loadType"] == "129"
+    assert query["modeAndSettingIdStr"] == "[16,17]"  # port is Off in the fixture
     assert "devCompany" in query  # flattened devSetting key
 
 

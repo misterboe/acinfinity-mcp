@@ -98,15 +98,85 @@ def test_decode_ai_automations():
     # °F and °C records merged into one °C entry; rails (0 °C / 0-100 %) become null
     by_kind = {t.sensor_kind: t for t in rule.thresholds}
     assert set(by_kind) == {"temperature", "humidity"}
-    assert (
-        by_kind["temperature"].unit,
-        by_kind["temperature"].low,
-        by_kind["temperature"].high,
-    ) == ("°C", None, 25.0)
-    assert len(by_kind["temperature"].raw) == 22
-    assert (by_kind["humidity"].low, by_kind["humidity"].high) == (None, None)
+    temp = by_kind["temperature"]
+    assert (temp.unit, temp.control, temp.target, temp.high, temp.low) == (
+        "°C",
+        "triggers",
+        None,
+        25.0,
+        None,
+    )
+    assert len(temp.raw) == 22
+    assert by_kind["humidity"].control == "none"
     vpd = result.rules[2].thresholds[0]
-    assert (vpd.sensor_kind, vpd.low, vpd.high) == ("vpd", 1.5, None)
+    # flag bit 32 = target mode: the rule holds 1.5 kPa, high/low are parked at rails
+    assert (vpd.sensor_kind, vpd.control, vpd.target, vpd.high, vpd.low) == (
+        "vpd",
+        "target",
+        1.5,
+        None,
+        None,
+    )
+
+
+def test_sensor_mode_data_matches_template_flat_fields():
+    """The app's grow-stage templates carry both encodings of every rule; the decoder must
+    reproduce the flat fields from sensorModeData for all of them."""
+    from acinfinity_mcp.models import _decode_sensor_mode_data
+
+    checked = 0
+    for template in load("recipe_v2"):
+        for rule in template["details"]:
+            thresholds = {
+                t.sensor_kind: t for t in _decode_sensor_mode_data(rule["sensorModeData"])
+            }
+            if not thresholds:
+                continue
+            checked += 1
+            temp, humi, vpd = (
+                thresholds.get("temperature"),
+                thresholds.get("humidity"),
+                thresholds.get("vpd"),
+            )
+            if rule["settingMode"] == 1 and rule["targetTemp"] and temp:
+                assert temp.control == "target" and temp.target == rule["targetTemp"]
+            if rule["settingMode"] == 1 and rule["targetHumi"] and humi:
+                assert humi.control == "target" and humi.target == rule["targetHumi"]
+            if rule["settingMode"] == 1 and rule["targetVpd"] and vpd:
+                assert vpd.control == "target" and vpd.target == rule["targetVpd"] / 10
+            if (
+                rule["autoHighTempSwitch"]
+                and rule["autoHighTempC"] != 90
+                and rule["settingMode"] != 1
+                and temp
+            ):
+                assert temp.high == rule["autoHighTempC"]
+            if (
+                rule["autoLowTempSwitch"]
+                and rule["autoLowTempC"]
+                and rule["settingMode"] != 1
+                and temp
+            ):
+                assert temp.low == rule["autoLowTempC"]
+            if (
+                rule["autoLowHumiSwitch"]
+                and rule["autoLowHumi"]
+                and rule["settingMode"] != 1
+                and humi
+            ):
+                assert humi.low == rule["autoLowHumi"]
+            if (
+                rule["autoHighHumiSwitch"]
+                and rule["autoHighHumi"] != 100
+                and rule["settingMode"] != 1
+                and humi
+            ):
+                assert humi.high == rule["autoHighHumi"]
+            if rule["humidityBuff"]:
+                assert humi.buffer == rule["humidityBuff"]
+            if rule["vpdBuff"] and vpd:
+                assert vpd.buffer == rule["vpdBuff"] / 10
+    assert checked >= 12
 
 
 def test_legacy_automation_mode_table_is_inverted():

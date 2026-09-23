@@ -69,19 +69,38 @@ Writing the wrong table energises equipment. `models.py` keys the table on `is_a
   `settingMode` (0 trigger / 1 target), `setSelect`, each with a `…Switch`. Values at their rail
   (temp 32 °F / 90 °C, humidity 0/100, VPD 0/99) mean "not set".
 - **AI controllers** leave those at rails and keep the real configuration in `sensorModeData`:
-  a JSON int array, `sensorModeDataNum` records of **11 ints**. Partially decoded:
+  a JSON int array, `sensorModeDataNum` records of **11 ints**.
+
+  **Decoded** (2026-09-23) by pairing the app's grow-stage templates — `GET
+  /api/version=2.0/dev/recipe?advVersion=2` returns every rule in *both* encodings (flat
+  fields **and** `sensorModeData`) — and confirmed against the user's live rules:
 
   | pos | meaning | evidence |
   |-----|---------|----------|
-  | 0 | `sensorType` (0 probe °F, 1 probe °C, 2 probe humidity, 3 probe VPD …) | matches sensor table |
-  | 6 | low threshold | 32 °F / 0 °C / 0 % / 15 (=1.5 kPa) |
-  | 8 | high threshold | 77 °F = 25 °C / 100 % (rail) / 99 (rail) |
-  | 3 | probably which triggers are enabled (`1` where exactly one non-rail threshold exists, `0` for the all-rail humidity record, `2` on the °F twin) | hypothesis |
-  | 1, 2 | unknown (`13/12/47`, `5/10`) — maybe hysteresis/buffer and a speed bound | open |
+  | 0 | `sensorType` (0 probe °F, 1 probe °C, 2 probe humidity, 3 probe VPD, …) | sensor table |
+  | 1 | flag bits: `1` high trigger on, `2` low trigger on, `32` target on; `4` set whenever any switch is on; `8` (live rules) vs `16` (templates) unknown — possibly °C vs °F display unit or transition vs buffer | 16/21/22/55 in templates ↔ `auto*Switch`/`target*Switch`; 12/13/47 live |
+  | 2 | constant: `5` for temperature/humidity, `10` for VPD (value scale?) | all samples |
+  | 3 | transition (dynamic response) in sensor units (VPD ×10) | live rules 2 °F / 1 °C / 1 VPD, templates 0 |
+  | 4 | buffer (hysteresis) in sensor units (VPD ×10) | templates: `temperatureFBuff 2` → 2 (°F rec) / 1 (°C rec), `humidityBuff 2` → 2, `vpdBuff 1` → 1 |
+  | 6 | **target** | 75 °F / 24 °C / 65 % / 8 (=0.8 kPa) ↔ `targetTempF/targetTemp/targetHumi/targetVpd` |
+  | 8 | **high** threshold | 80 °F / 27 °C / 70 % ↔ `autoHighTemp*/autoHighHumi`; 194/90/100/99 = rail |
+  | 10 | **low** threshold | 70 °F / 21 °C / 60 % ↔ `autoLowTemp*/autoLowHumi`; 32/0 = rail |
+  | 5, 7, 9 | always 0 | — |
 
-  Temperature is stored twice (a °F record and a °C record with the same meaning); the server
-  merges them into one °C entry. Rails are reported as `null` ("not set"). Confirmed against the
-  app on 2026-09-23: port 1 Auto = high 25 °C only, port 3 VPD = low 1.5 kPa only.
+  Target mode (bit 32) also carries the high/low switch bits with rail values, exactly like the
+  flat `targetVpd` rules do, so **bit 32 wins**: the user's port-3 VPD rule `[3,47,10,1,0,0,15,0,99,0,0]`
+  is a **1.5 kPa target**, not a low trigger. Temperature is stored twice (°F + °C record); the
+  server merges them into one °C entry. `tests/fixtures/recipe_v2.json` pins the decoder against
+  all 30 template rules.
+
+### Grow-stage templates (`recipe`)
+
+`GET /api/version=2.0/dev/recipe?advVersion=N` — `advVersion=1` returns templates in the
+**legacy** encoding (`currentMode` 1 On/3 Cycle/4 Auto/6 VPD, `grouptDevType` = device class
+1..6, no `sensorModeData`), `advVersion=2` the **new-framework** encoding (`currentMode`
+2 On/3 Auto/6 Cycle/8 VPD, with `sensorModeData`), `advVersion=3` a third variant (legacy-like,
+5 templates). Templates: Seedling, Vegetative, Flowering, Plant Kit, Drying — useful as canonical
+rule bodies when creating automations.
 
 ### Other fields
 

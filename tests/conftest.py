@@ -83,6 +83,9 @@ class FakeApi:
         if path == PATH_V2_ALARMS:
             return envelope([])
         if path in (PATH_ADD_DEV_MODE, PATH_UPDATE_ADV_SETTING):
+            assert not query and form, "writes must carry the payload as form body"
+            if form["devId"] == AI_ID and request.headers.get("minversion") != "3.5":
+                return envelope(None, code=100001)  # what the live API does (ober37 Quirk 14)
             return envelope(None)
         if path == PATH_MODE_AND_SETTING:
             assert request.method == "PUT"
@@ -91,7 +94,8 @@ class FakeApi:
         return httpx2.Response(404)
 
     def writes(self, path: str) -> list[dict[str, str]]:
-        return [q for m, p, _, q in self.calls if p == path]
+        """Payloads of write calls to `path` (form body, or query string for the PUT)."""
+        return [f or q for _, p, f, q in self.calls if p == path]
 
 
 @pytest.fixture

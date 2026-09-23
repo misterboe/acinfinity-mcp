@@ -19,8 +19,9 @@ Uses the same unofficial cloud API as the AC Infinity app, so the controller mus
 | Area | State |
 |------|-------|
 | Reading controllers, sensors, port settings, automations | ✅ verified live on a Controller AI+ (CTR89Q) and a 69 Pro |
-| Writing port modes / power / triggers | ⚠️ implemented for both controller families, **not yet verified on hardware** — writes are full-object round trips, test on an unused port first |
-| Creating / editing automations | ❌ not implemented (endpoints documented in [`docs/api/automations.md`](docs/api/automations.md)) |
+| Writing port modes / power / timers / triggers | ✅ verified live on the AI+ (mode + timer round trip); standard family follows the Home Assistant integration's proven path |
+| Writing advanced settings (calibration, load type, …) | ⚠️ implemented, accepted by the API, persistence not yet verified |
+| Creating / editing automations | 🚧 next up (endpoints and rule encoding documented in [`docs/api/automations.md`](docs/api/automations.md)) |
 
 ## Tools
 

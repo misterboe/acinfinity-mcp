@@ -421,18 +421,31 @@ _SENSOR_MODE_RECORD_LEN = 11
 class AutomationThreshold(BaseModel):
     """One sensor of a new-framework Auto/VPD rule, decoded from `sensorModeData`.
 
-    The record layout (11 ints per sensor) is partially reverse-engineered:
-    [0]=sensorType, [6]=low value, [8]=high value; a value at its rail (0 °C / 32 °F,
-    0 or 100 %, 0 or 9.9 kPa) means the trigger is not set and is reported as null.
+    Record layout (11 ints per sensor), decoded 2026-09-23 by pairing the app's grow-stage
+    templates (`recipe?advVersion=2`) with their flat fields — see docs/api/automations.md:
+    [0] sensorType, [1] flag bits (1 high trigger, 2 low trigger, 32 target),
+    [3] transition, [4] buffer, [6] target, [8] high, [10] low.
     Temperature is normalised to °C (the API stores a °F twin record).
     """
 
     sensor_kind: str
     sensor_location: str
     unit: str
-    low: float | None = Field(description="Turn on below this value; null = no low trigger.")
-    high: float | None = Field(description="Turn on above this value; null = no high trigger.")
-    raw: list[int] = Field(description="Undecoded 11-int record(s); positions 1-3 unknown.")
+    control: str = Field(
+        description="'target' (hold a setpoint), 'triggers' (high/low thresholds) or 'none'."
+    )
+    target: float | None = Field(description="Setpoint when control='target', else null.")
+    high: float | None = Field(description="Turn on above this value; null = not enabled.")
+    low: float | None = Field(description="Turn on below this value; null = not enabled.")
+    buffer: float | None = Field(
+        default=None, description="Hysteresis band around the threshold, sensor units."
+    )
+    transition: float | None = Field(
+        default=None, description="Dynamic-response step per level, sensor units."
+    )
+    raw: list[int] = Field(
+        description="The 11-int record(s) as stored; bits 4/8/16 of [1] unknown."
+    )
 
 
 class AutomationRule(BaseModel):
@@ -520,6 +533,11 @@ _THRESHOLD_RAILS: dict[str, tuple[float, float]] = {
 }
 
 
+_SMD_FLAG_HIGH = 1
+_SMD_FLAG_LOW = 2
+_SMD_FLAG_TARGET = 32
+
+
 def _threshold_value(value: float, unit: str, *, high: bool) -> float | None:
     low_rail, high_rail = _THRESHOLD_RAILS.get(unit, (None, None))
     return None if value == (high_rail if high else low_rail) else value
@@ -529,17 +547,30 @@ def _decode_threshold(record: list[int]) -> AutomationThreshold | None:
     if len(record) < _SENSOR_MODE_RECORD_LEN or record[0] not in _SENSOR_META:
         return None
     kind, unit, location = _SENSOR_META[record[0]]
-    low, high = float(record[6]), float(record[8])
+    flags = record[1]
+    target, high, low = float(record[6]), float(record[8]), float(record[10])
+    transition, buffer = float(record[3]), float(record[4])
     if kind == "vpd":
-        low, high = low / 10, high / 10
+        target, high, low, transition, buffer = (
+            v / 10 for v in (target, high, low, transition, buffer)
+        )
     elif record[0] in _FAHRENHEIT_TYPES:
-        low, high = round((low - 32) * 5 / 9, 1), round((high - 32) * 5 / 9, 1)
+        target, high, low = (round((v - 32) * 5 / 9, 1) for v in (target, high, low))
+        transition, buffer = (round(v * 5 / 9, 1) for v in (transition, buffer))
+    has_target = bool(flags & _SMD_FLAG_TARGET)
+    has_high = bool(flags & _SMD_FLAG_HIGH) and not has_target
+    has_low = bool(flags & _SMD_FLAG_LOW) and not has_target
+    control = "target" if has_target else ("triggers" if has_high or has_low else "none")
     return AutomationThreshold(
         sensor_kind=kind,
         sensor_location=location,
         unit=unit,
-        low=_threshold_value(low, unit, high=False),
-        high=_threshold_value(high, unit, high=True),
+        control=control,
+        target=target if has_target else None,
+        high=_threshold_value(high, unit, high=True) if has_high else None,
+        low=_threshold_value(low, unit, high=False) if has_low else None,
+        buffer=buffer or None,
+        transition=transition or None,
         raw=list(record),
     )
 

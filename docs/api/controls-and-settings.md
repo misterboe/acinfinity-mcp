@@ -10,14 +10,31 @@ Port `0` = controller-level (settings only relevant there: temp unit, calibratio
 ## Write flow
 
 ```
-standard controller (devType 11, 18)
-  controls: GET getdevModeSettingList → overlay → POST addDevMode?<all control keys>
-  settings: POST getDevSetting          → overlay → POST updateAdvSetting?<all setting keys>&devName=<current name>
+controls (both families) — VERIFIED LIVE on AI+ 2026-09-23
+  POST getdevModeSettingList → overlay changed keys → POST addDevMode  (form body, all CONTROL_KEYS)
+  AI family additionally: header `minversion: 3.5`  (without it: body code 100001)
 
-AI controller (devType 20, 21, 22)
-  both:     GET getdevModeSettingList → flatten {**devSetting, **top} → overlay
-            → set modeAndSettingIdStr by atType → PUT modeAndSetting?<all keys>  (header minversion: 3.5)
+settings, standard controller (devType 11, 18) — HA-verified
+  POST getDevSetting → overlay → POST updateAdvSetting (form body, all SETTING_KEYS + devName=<current name>)
+
+settings, AI controller (devType 20, 21, 22) — accepted (200) in a no-op test, persistence unverified
+  POST getdevModeSettingList → flatten {**devSetting, **top} → overlay
+  → set modeAndSettingIdStr by atType → PUT modeAndSetting?<all keys>  (header minversion: 3.5)
 ```
+
+Live no-op experiment on an idle AI+ port (identical values written back):
+
+| Variant | Result |
+|---------|--------|
+| `addDevMode`, payload in **query string**, no `minversion` (HA legacy style) | `100001 Something went wrong` |
+| `addDevMode`, payload as **form body**, `minversion: 3.5` | `200 success` |
+| `PUT modeAndSetting?…`, `minversion: 3.5` | `200 success` |
+
+Persistence check: `{atType: 4, acitveTimerOn: 86400}` → read-back `atType 4`, `remainTime 86400`,
+port stayed off; `{atType: 1}` → read-back Off. **Fields irrelevant to the mode being written are
+silently discarded** (`acitveTimerOn: 0` sent together with `atType: 1` was ignored, the timer value
+stayed at 86400) — ober37 Quirk 37. To change a mode's parameters, send them together with that
+`atType`.
 
 Serialisation of every key (HA `__transfer_values`): missing → `0`, `None` → `0`, `bool` → `"true"/"false"`,
 `dict`/`list` → JSON string, else as-is. **Send every known key**, not only the changed ones.

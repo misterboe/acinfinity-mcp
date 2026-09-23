@@ -18,6 +18,30 @@ See [connection.md](connection.md).
 | 11 | GET | `/api/version=2.0/dev/recipe?advVersion=1` | grow-stage templates | all |
 | 12 | POST | `/api/log/dataPage` | sensor history (time-cursor pagination, see ober37 Quirk 3) | all |
 
+### 12. History (`/api/log/dataPage`)
+
+```
+POST /api/log/dataPage
+devId=<id>&time=<unix start>&endTime=<unix end>&pageNum=1&pageSize=2000
+```
+
+`data = {rows: [...], total, validFrom}`; `pageNum` is ignored (paginate by advancing `time` past the
+last `createTime`). Observed on the AI+ (2026-09-23), one row per ~5 min:
+
+```jsonc
+{"createTime": 1790172240, "temperature": 2200, "humidity": 6040, "vpdNums": 104,   // ×100, note vpdNums casing
+ "portSpead": 99,          // 4-bit nibble per port, LSB = port 1: 0x63 → port1=3, port2=6
+ "portStatus": 0,          // 1 bit per port: automation-triggered
+ "allSpead": 0, "dataStatus": 0, "sensorDataBlock": 6, "devVersion": 13,
+ "sensors": [ {"sensorType": 3, "accessPort": 1, "sensorData": 159, "sensorPrecision": 3, "interchangeSensor": 0}, … ],
+ "leafTemp": 0, "leafTempF": 0, "thermalMin/Max/Avg/Center": 0, "thermalImagingSensorOnline": 0,
+ "internalSensor*", "external1Sensor*", "external2Sensor*": null,   // older sensor slots
+ "portDataBytes": null, "portStateData": null, "portSpeedMin": 0}
+```
+
+The `sensors[]` array carries the same per-sensor records as the live device list, so probe vs
+onboard history can be separated. `/api/log/logdataByAll` answers `500` on this account.
+
 **`minversion: 3.5` header rewrites the route to `/api/3.5/…`** (visible in 404 bodies). On
 `getdevModeSettingList` it adds `standardMode`, `devAdvGroups`, `insideTemp`/`outsideTemp`,
 `isAdvTempTrigger` and fills `sensorSettingStr`/`sensorTransBuffStr`; other values (4.0 … 10.0)
