@@ -25,6 +25,7 @@ PASSWORD_MAX_LEN = 25
 REQUEST_TIMEOUT = 10.0
 MAX_RETRIES = 3
 DEVICE_LIST_TTL = 5.0
+WRITE_SPACING = 1.5  # seconds between consecutive writes (ober37 Quirk 15: 403 otherwise)
 
 PATH_LOGIN = "/api/user/appUserLogin"
 PATH_DEVICE_LIST = "/api/user/devInfoListAll"
@@ -674,12 +675,38 @@ class AcInfinityClient:
         self._device_cache = None
 
     async def update_automation_rule(self, rule: dict[str, Any]) -> None:
-        """Write a complete rule object (as returned by getGroups, with its advId) back in place."""
+        """Write a complete rule object (as returned by getGroups, with its advId) back in place.
+
+        Mirrors the app (`EditAutomationDetailsModel`: `updateGroupsById(transBean2Map(rule))`):
+        every non-null field is sent, `sensorModeData` travels as the untouched string.
+        """
         controller_id = str(rule["devId"])
-        await self.describe(controller_id)
+        is_ai, _ = await self.describe(controller_id)
         async with self._lock:
-            payload = {k: v for k, v in _serialise(tuple(rule), {}, rule).items()}
-            await self._authed("POST", PATH_V2_UPDATE_GROUP, data=payload)
+            payload = {
+                k: (
+                    json.dumps(v)
+                    if isinstance(v, dict | list)
+                    else str(v).lower()
+                    if isinstance(v, bool)
+                    else v
+                )
+                for k, v in rule.items()
+                if v is not None
+            }
+            await self._authed("POST", PATH_V2_UPDATE_GROUP, data=payload, min_version=is_ai)
+
+    async def rename_program(self, controller_id: str, program: str, new_name: str) -> list[int]:
+        """Rename an Advance Automation program = rewrite `advName` on each of its rules."""
+        rules = await self.get_automations(controller_id)
+        targets = [r for r in rules if r.get("advName") == program]
+        if not targets:
+            known = sorted({r.get("advName") or "" for r in rules})
+            raise AcInfinityError(f"no program named {program!r}; programs: {known}")
+        for rule in targets:
+            await self.update_automation_rule({**rule, "advName": new_name})
+            await asyncio.sleep(WRITE_SPACING)
+        return [r["advId"] for r in targets]
 
     async def set_automation_enabled(self, controller_id: str, rule_id: int, enabled: bool) -> None:
         """updateGroupsIsOn TOGGLES; read first so the call only happens when needed."""

@@ -468,6 +468,11 @@ class AutomationRule(BaseModel):
     )
     window_end: str | None = Field(description="Daily end HH:MM; null when continuous.")
     days: list[str] = Field(description="Weekdays the window applies to; empty when continuous.")
+    stored_window: str | None = Field(
+        default=None,
+        description="The window/days still stored on the rule while the 24/7 switch is on "
+        "(inactive; becomes the schedule again when the switch is turned off).",
+    )
     cycle_on_minutes: int | None = None
     cycle_off_minutes: int | None = None
     min_on_minutes: int | None = Field(default=None, description="onMinTime when isOnMinMaxTime=1.")
@@ -672,6 +677,7 @@ def decode_automation_rule(raw: dict[str, Any], *, is_ai: bool) -> AutomationRul
         window_start=None if continuous else start,
         window_end=None if continuous else end,
         days=[] if continuous else days,
+        stored_window=_schedule_summary(days, start, end) if continuous else None,
         cycle_on_minutes=(raw.get("cycleOn") or 0) // 60 if mode == "Cycle" else None,
         cycle_off_minutes=(raw.get("cycleOff") or 0) // 60 if mode == "Cycle" else None,
         min_on_minutes=raw.get("onMinTime") if raw.get("isOnMinMaxTime") == 1 else None,

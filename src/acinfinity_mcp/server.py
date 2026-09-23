@@ -318,6 +318,22 @@ async def rename_port(
     return WriteResult(controller_id=controller_id, port=port, changed={"devName": name})
 
 
+@mcp.tool(title="Rename automation", annotations=WRITE)
+async def rename_automation(
+    ctx: Context[AppState],
+    controller_id: ControllerId,
+    program: Annotated[str, Field(min_length=1, description="Current program name (advName).")],
+    new_name: Annotated[str, Field(min_length=1, max_length=40, description="New program name.")],
+    user_authorized: Authorized = False,
+) -> dict[str, Any]:
+    """Rename an Advance Automation program. A program is the set of rules sharing a name, so
+    every rule of it is rewritten in place with the new name (all other fields unchanged).
+    """
+    _require_auth(user_authorized)
+    ids = await _call(_client(ctx).rename_program(controller_id, program, new_name))
+    return {"controller_id": controller_id, "program": new_name, "rules_updated": ids}
+
+
 @mcp.tool(title="Set port mode", annotations=WRITE)
 async def set_port_mode(
     ctx: Context[AppState],

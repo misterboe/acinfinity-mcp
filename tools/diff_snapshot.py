@@ -41,6 +41,7 @@ VOLATILE = {
     "runState",
     "devTimeZone",
     "sensorReadings",
+    "advUpdateTime",
 }
 
 

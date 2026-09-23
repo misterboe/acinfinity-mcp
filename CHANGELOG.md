@@ -27,6 +27,14 @@ All notable changes to this project are documented here. The format follows
 - Standard-controller writes carry the app's request signature (`sign`/`requestId`/`version`
   headers, algorithm from the decompiled Android app via Backroads4Me's fork).
 
+### Added (automations)
+- `rename_automation`: rewrites every rule of a program with the new `advName` via
+  `updateGroupsById`, exactly like the app's edit path (non-null fields, raw `sensorModeData`),
+  with 1.5 s spacing between writes.
+- Automation rules under the 24/7 switch now also report `stored_window` (the inactive
+  window/days still saved on the rule) so the null window is not mistaken for a regression.
+- Project `.claude/settings.json` pre-allows the read-only and backup tools.
+
 ### Added (from the decompiled Android app 2.0.8)
 - `docs/api/app-endpoints.{md,json}`: the complete endpoint inventory — 179 Retrofit
   declarations with parameters, headers and return types.

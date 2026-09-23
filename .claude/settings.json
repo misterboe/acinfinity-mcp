@@ -1,3 +1,16 @@
 {
-  "enabledMcpjsonServers": ["acinfinity"]
+  "enabledMcpjsonServers": ["acinfinity"],
+  "permissions": {
+    "allow": [
+      "mcp__acinfinity__list_controllers",
+      "mcp__acinfinity__get_port_settings",
+      "mcp__acinfinity__get_port_settings_raw",
+      "mcp__acinfinity__get_device_settings",
+      "mcp__acinfinity__list_automations",
+      "mcp__acinfinity__get_automations_raw",
+      "mcp__acinfinity__backup_settings",
+      "mcp__acinfinity__list_backups",
+      "mcp__acinfinity__compare_backup"
+    ]
+  }
 }

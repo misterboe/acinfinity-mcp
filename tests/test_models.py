@@ -94,6 +94,7 @@ def test_decode_ai_automations():
     # switchTime 255 = 24/7 switch on -> the stored 09:00-17:00 window is ignored
     assert rule.continuous and rule.schedule == "24/7"
     assert rule.window_start is None and rule.window_end is None and rule.days == []
+    assert rule.stored_window == "daily 09:00-17:00"
     assert rule.min_on_minutes == 5
     # °F and °C records merged into one °C entry; rails (0 °C / 0-100 %) become null
     by_kind = {t.sensor_kind: t for t in rule.thresholds}

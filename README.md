@@ -40,6 +40,7 @@ Uses the same unofficial cloud API as the AC Infinity app, so the controller mus
 | `list_backups` / `compare_backup` | List saved backups; show every field that differs between a backup and the device now |
 | `restore_settings` | Write a backup back (changed ports and automation rules), then re-read and report anything still different |
 | `rename_port` | Change the port label shown in the app |
+| `rename_automation` | Rename an Advance Automation program (rewrites each of its rules in place) |
 | `set_port_mode` | Switch a port to Off / On / Auto / Timer / Cycle / Schedule / VPD / … |
 | `set_port_power` | On/off power level 0–10 |
 | `set_port_timer` | Countdown to on / to off |

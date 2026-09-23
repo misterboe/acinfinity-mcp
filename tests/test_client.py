@@ -132,3 +132,16 @@ async def test_write_to_empty_port_is_refused(client, api):
     with pytest.raises(AcInfinityError, match="no device plugged in"):
         await client.update_port_controls(AI_ID, 8, {"atType": 2})
     assert api.writes(PATH_MODE_AND_SETTING) == [] and api.writes(PATH_ADD_DEV_MODE) == []
+
+
+async def test_rename_program_rewrites_each_rule_with_raw_fields(client, api, monkeypatch):
+    from acinfinity_mcp.client import PATH_V2_UPDATE_GROUP
+
+    monkeypatch.setattr("acinfinity_mcp.client.asyncio.sleep", _no_sleep)
+    ids = await client.rename_program(AI_ID, "Automatisierung 1", "Flowering")
+    assert ids == [2596136, 2596144, 2596148]
+    forms = api.writes(PATH_V2_UPDATE_GROUP)
+    assert [f["advName"] for f in forms] == ["Flowering"] * 3
+    assert forms[0]["sensorModeData"].startswith("[0, 13, 5")  # raw string untouched
+    assert "portState" not in forms[0] or forms[0]["portState"] != "None"  # nulls skipped
+    assert forms[0]["isDel"] == "false"
