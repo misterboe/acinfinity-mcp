@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "acinfinity": {
+      "command": "uv",
+      "args": ["run", "--env-file", ".env", "acinfinity-mcp"]
+    }
+  }
+}

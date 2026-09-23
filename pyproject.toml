@@ -1,0 +1,57 @@
+[project]
+name = "acinfinity-mcp"
+version = "0.1.0"
+description = "MCP server for AC Infinity UIS grow controllers (sensors, ports, modes) via the AC Infinity cloud API"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Boris Schauer" }]
+requires-python = ">=3.12"
+keywords = ["mcp", "model-context-protocol", "ac-infinity", "grow", "uis", "home-automation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Home Automation",
+]
+dependencies = [
+    "mcp[cli]>=2.2.0",
+    "httpx2>=2.13.1",
+    "pydantic>=2.13.5",
+]
+
+[project.scripts]
+acinfinity-mcp = "acinfinity_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/misterboe/acinfinity-mcp"
+Issues = "https://github.com/misterboe/acinfinity-mcp/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.16.8",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "acinfinity_mcp"
+module-root = "src"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "RUF"]
