@@ -69,9 +69,8 @@ bselee/enviroflow.app). The union of AC Infinity paths they use:
 | `/api/upgrade/getUpgrade` | ober37 | ✅ read: `POST fFamily=<devType>&firmwareVersion=&hardwareVersion=` → `{"msg":"No Entity","data":{"iosSupportVersion":"2.0.7","iosSupportMax":"2.9.9","androidSupportVersion":"2.0.6","androidSupportMax":"2.9.9"}}` when no firmware update exists |
 | `/api/upgrade/downgrade` | ober37 | not tried (needs `devMacAddr`; returns a firmware download URL) |
 
-No public client knows more than this list. Everything beyond it (sharing, notifications,
-plant/log features, the `sensorDataBlock`/thermal fields) requires the app binary — see the
-"How to find more" note in [README.md](README.md).
+No public client knows more than this list. The **complete** inventory — every Retrofit
+declaration of the Android app, 179 method+path pairs — is in [app-endpoints.md](app-endpoints.md).
 
 **`minversion: 3.5` header rewrites the route to `/api/3.5/…`** (visible in 404 bodies). On
 `getdevModeSettingList` it adds `standardMode`, `devAdvGroups`, `insideTemp`/`outsideTemp`,

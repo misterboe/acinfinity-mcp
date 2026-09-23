@@ -57,8 +57,25 @@ Verified live 2026-09-23 (port 5): mode + timer persisted, restored with `atType
 Rules: **a listed group must carry all of its fields** (missing → server default: `onSpead` 10,
 `onSelfSpead` 0); fields of unlisted groups are ignored (timer reset while in Off with `[16,17]`
 was ignored, with `[16,17,20,21]` still ignored — timers only persist while `atType` is 4/5).
-`devName` in the PUT renames the port (used by `rename_port`). **Never send the full flattened
-object** through this endpoint: with `devSetting.devName = null` it renamed a port to "0".
+`devName` in the PUT renames the port (used by `rename_port`).
+
+**What the app really sends** (`ModesHModel.setSettingForNet`, decompiled app 2.0.8): the id list
+above chosen by mode (Off `[16,17]`, On `[16,18]`, Timer `[16,20,21]`, Cycle/Schedule
+`[16,22,23,40]`, Auto `[112,16,19,32,98,99]`, VPD `[16,81,32,98,99]`, other sensor modes
+`[16,97,32,98,99]`), plus **every non-null field of the mode object** (`NetDeviceMode`, nulls are
+skipped), plus these 35 keys copied from `devSetting`:
+
+`offSpead, backlightSwitch, devCompany, devLight, devName, portParamData, ecOrTds, hasBacklightSwitch,
+hasKeytoneSwitch, isOnMinMaxTime, isOpenDoseTime, keytoneSwitch, loadType, offDoseTime, onDoseTime,
+onMaxTime, onMinTime, onTime, onTimeSwitch, otaUpdating, photocellSwitch, secFucDevEffect, secFucDevtype,
+secFucParamNums, secFucParams, secFucStatus, sensorOneType, sensorSettingStr, sensorTransBuffStr,
+sensorTwoType, subDeviceId, subDeviceType, subDeviceVersion, supportOta, zoneSensorType`
+
+plus `devId`, `port`, `onSelfSpead` (only when writing Off), and `resetTemperatureValues`: every °F
+twin (`devHtf`, `devLtf`, `targetTempF`, `waterTemp*ValueF`) below 32 is clamped to 32. `devName`
+comes from the app's own port model — that is why the HA-style flattened object (which serialises
+the API's `devSetting.devName = null` as `0`) renamed a port to "0". `client.update_device_settings`
+now implements this recipe with the port name taken from the device list.
 
 Writes to a port with nothing plugged in (`online 0`, `portResistance 65535`) fail with
 `999999 Data saving failed` on every endpoint (`modeAndSetting`, `updateAdvSetting`); the app

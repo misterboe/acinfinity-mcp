@@ -421,10 +421,9 @@ _SENSOR_MODE_RECORD_LEN = 11
 class AutomationThreshold(BaseModel):
     """One sensor of a new-framework Auto/VPD rule, decoded from `sensorModeData`.
 
-    Record layout (11 ints per sensor), decoded 2026-09-23 by pairing the app's grow-stage
-    templates (`recipe?advVersion=2`) with their flat fields — see docs/api/automations.md:
-    [0] sensorType, [1] flag bits (1 high trigger, 2 low trigger, 32 target),
-    [3] transition, [4] buffer, [6] target, [8] high, [10] low.
+    Record layout (11 bytes per sensor) taken from the app's own parser
+    (`extractSensorData`, app 2.0.8): [0] sensorType, [1] switch bits, [2] precision codes,
+    [3] transition, [4] buffer, [5:7] target, [7:9] high, [9:11] low (int16).
     Temperature is normalised to °C (the API stores a °F twin record).
     """
 
@@ -533,9 +532,20 @@ _THRESHOLD_RAILS: dict[str, tuple[float, float]] = {
 }
 
 
+# sensorModeData record = 11 bytes, decoded by the app's `extractSensorData` (aw4.java, app 2.0.8):
+#   [0] sensorType
+#   [1] flag bits: 1 highSwitch, 2 lowSwitch, 4 targetSwitch, 8 transSwitch, 16 bufferSwitch,
+#       32 autoOrTarget (1 = target mode, 0 = trigger mode)
+#   [2] precision codes: bits 2-3 for the int16 values, bits 0-1 for trans/buffer
+#   [3] transValue, [4] bufferValue (uint8)
+#   [5:7] targetValue, [7:9] highValue, [9:11] lowValue (int16 big-endian)
+# Values are scaled x10 for VPD/pH (sensorType 3, 7, 13) after applying the precision.
 _SMD_FLAG_HIGH = 1
 _SMD_FLAG_LOW = 2
-_SMD_FLAG_TARGET = 32
+_SMD_FLAG_TARGET_SWITCH = 4
+_SMD_FLAG_TRANS = 8
+_SMD_FLAG_BUFFER = 16
+_SMD_FLAG_TARGET_MODE = 32
 
 
 def _threshold_value(value: float, unit: str, *, high: bool) -> float | None:
@@ -543,34 +553,51 @@ def _threshold_value(value: float, unit: str, *, high: bool) -> float | None:
     return None if value == (high_rail if high else low_rail) else value
 
 
+def _smd_scaled(raw: int, precision_code: int) -> float:
+    """`Sensor.getActualValueFloat`: code 0 -> x10, 2 -> /10, 3 -> /100, else as is."""
+    if raw == -32768:
+        return float(raw)
+    return {0: raw * 10.0, 2: raw / 10.0, 3: raw / 100.0}.get(precision_code, float(raw))
+
+
 def _decode_threshold(record: list[int]) -> AutomationThreshold | None:
     if len(record) < _SENSOR_MODE_RECORD_LEN or record[0] not in _SENSOR_META:
         return None
     kind, unit, location = _SENSOR_META[record[0]]
     flags = record[1]
-    target, high, low = float(record[6]), float(record[8]), float(record[10])
-    transition, buffer = float(record[3]), float(record[4])
-    if kind == "vpd":
+    value_code, tb_code = (record[2] >> 2) & 3, record[2] & 3
+    multiply = (
+        10
+        if record[0] in (SensorType.PROBE_VPD, SensorType.CONTROLLER_VPD, SensorType.HYDRO_PH)
+        else 1
+    )
+    target, high, low = (
+        _smd_scaled(int.from_bytes(bytes(record[i : i + 2]), "big", signed=True), value_code)
+        * multiply
+        for i in (5, 7, 9)
+    )
+    transition, buffer = (_smd_scaled(record[i], tb_code) * multiply for i in (3, 4))
+    if kind in ("vpd", "hydro_ph"):
         target, high, low, transition, buffer = (
             v / 10 for v in (target, high, low, transition, buffer)
         )
     elif record[0] in _FAHRENHEIT_TYPES:
         target, high, low = (round((v - 32) * 5 / 9, 1) for v in (target, high, low))
         transition, buffer = (round(v * 5 / 9, 1) for v in (transition, buffer))
-    has_target = bool(flags & _SMD_FLAG_TARGET)
-    has_high = bool(flags & _SMD_FLAG_HIGH) and not has_target
-    has_low = bool(flags & _SMD_FLAG_LOW) and not has_target
-    control = "target" if has_target else ("triggers" if has_high or has_low else "none")
+    target_mode = bool(flags & _SMD_FLAG_TARGET_MODE)
+    has_high = bool(flags & _SMD_FLAG_HIGH) and not target_mode
+    has_low = bool(flags & _SMD_FLAG_LOW) and not target_mode
+    control = "target" if target_mode else ("triggers" if has_high or has_low else "none")
     return AutomationThreshold(
         sensor_kind=kind,
         sensor_location=location,
         unit=unit,
         control=control,
-        target=target if has_target else None,
+        target=target if target_mode else None,
         high=_threshold_value(high, unit, high=True) if has_high else None,
         low=_threshold_value(low, unit, high=False) if has_low else None,
-        buffer=buffer or None,
-        transition=transition or None,
+        buffer=buffer if flags & _SMD_FLAG_BUFFER else None,
+        transition=transition if flags & _SMD_FLAG_TRANS else None,
         raw=list(record),
     )
 

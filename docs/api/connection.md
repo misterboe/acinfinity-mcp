@@ -77,6 +77,21 @@ Unsigned writes are answered `403 "Login Expired"` there. The v2 (`version=2.0`)
 unsigned writes with `minversion: 3.5`. This server signs standard-family writes; not verified
 on our hardware (no standard controller on the account).
 
+### What the app's interceptor does (decompiled `RefreshTokenInterceptor`, app 2.0.8)
+
+- Retrofit methods declare `@Header("minversion")` with the value of
+  `getMinVersionHeader(devType)` = `"<devType>|3.5"` for the H family (devType **19–22**, 26, 27,
+  51), room-to-room fan 33, AC8K 39/40, AirTap 48, circulation fans 49/50 — and `"<devType>|"` for
+  everything else. The interceptor splits it into two headers: `minversion` (`3.5` or empty) and
+  `devType`. Requests without it get `devType` derived from `fFamily`/`devId`.
+- Once the account has a `secretId` (feature `REFRESH_TOKEN`), every request additionally carries
+  `token`, `requestApp`, `version` (= app version name), `requestId` (ms timestamp) and
+  `sign = md5(md5(token+version) + md5(secretId+requestApp+requestId))`. If the access token is
+  about to expire it calls `POST /api/auth/refresh?refreshToken=…` first; on a body `code 403`
+  it refreshes and retries once.
+- Login: `POST user/appUserLogin?appEmail&appPasswordl&fcmToken`; new-token flow:
+  `POST auth/newToken?appEmail&fcmToken`.
+
 ## Response envelope
 
 Every endpoint returns HTTP 200 with a JSON envelope:

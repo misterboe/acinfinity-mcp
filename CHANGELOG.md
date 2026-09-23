@@ -27,10 +27,14 @@ All notable changes to this project are documented here. The format follows
 - Standard-controller writes carry the app's request signature (`sign`/`requestId`/`version`
   headers, algorithm from the decompiled Android app via Backroads4Me's fork).
 
-### Removed
-- The full-object `modeAndSetting` PUT for AI advanced settings: it renamed a port to "0"
-  in a live test because `devSetting.devName` is null on AI controllers. AI advanced-settings
-  writes are refused until the app's field-group ids are mapped.
+### Added (from the decompiled Android app 2.0.8)
+- `docs/api/app-endpoints.{md,json}`: the complete endpoint inventory — 179 Retrofit
+  declarations with parameters, headers and return types.
+- `sensorModeData` decoder now mirrors the app's parser byte for byte (switch bits, precision
+  codes, int16 values).
+- AI advanced-settings writes use the app's own `modeAndSetting` recipe (non-null mode fields +
+  35 setting keys + port name + °F clamp) instead of the HA-style flattened object that renamed
+  a port to "0".
 
 ### Changed
 - Port control writes go to `addDevMode` as form body on both families, with the

@@ -68,12 +68,14 @@ async def test_ai_control_write_uses_add_dev_mode_with_minversion(client, api):
     assert api.writes(PATH_MODE_AND_SETTING) == []
 
 
-async def test_ai_settings_write_is_refused(client, api):
-    from acinfinity_mcp.client import AcInfinityError
-
-    with pytest.raises(AcInfinityError, match="not supported on AI"):
-        await client.update_device_settings(AI_ID, 1, "Abluft", {"loadType": 129})
-    assert api.writes(PATH_MODE_AND_SETTING) == []
+async def test_ai_settings_write_follows_the_app_recipe(client, api):
+    await client.update_device_settings(AI_ID, 1, "Abluft", {"loadType": 129})
+    (query,) = api.writes(PATH_MODE_AND_SETTING)
+    assert query["loadType"] == "129" and query["devName"] == "Abluft"
+    assert query["modeAndSettingIdStr"] == "[16,17]"  # port is Off in the fixture
+    assert "devCompany" in query and "atType" in query  # setting key + mode field
+    assert "devSetting" not in query and "calibrationTime" not in query  # nested / non-app keys
+    assert int(query["devHtf"]) >= 32  # °F twins are clamped like the app does
 
 
 async def test_ai_rename_is_minimal_put_with_group_17(client, api):

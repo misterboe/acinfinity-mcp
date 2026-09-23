@@ -22,7 +22,8 @@ Uses the same unofficial cloud API as the AC Infinity app, so the controller mus
 | Writing port modes / power / timers / triggers | ✅ verified live on the AI+ (mode + timer round trip); standard family follows the Home Assistant integration's proven path |
 | Backup / compare / restore of the whole configuration | ✅ ports and automation rules; controller record is reported, not written |
 | Renaming ports | ✅ verified live on the AI+ (ports with nothing plugged in are rejected by the controller) |
-| Writing advanced settings (calibration, load type, …) | ⚠️ standard family only (signed `updateAdvSetting`); refused on AI controllers until the app's field-group ids are mapped |
+| Writing advanced settings (calibration, load type, …) | ⚠️ implemented on both families exactly like the app does it (decompiled 2.0.8); not yet exercised on hardware |
+| API coverage | ✅ complete — all 179 endpoint declarations of the Android app are inventoried in [`docs/api/app-endpoints.md`](docs/api/app-endpoints.md) |
 | Creating / editing automations | 🚧 in-place rule edits and enable/disable are wired (used by restore); create/delete next — see [`docs/api/automations.md`](docs/api/automations.md) |
 
 ## Tools

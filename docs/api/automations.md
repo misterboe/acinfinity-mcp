@@ -71,25 +71,26 @@ Writing the wrong table energises equipment. `models.py` keys the table on `is_a
 - **AI controllers** leave those at rails and keep the real configuration in `sensorModeData`:
   a JSON int array, `sensorModeDataNum` records of **11 ints**.
 
-  **Decoded** (2026-09-23) by pairing the app's grow-stage templates — `GET
-  /api/version=2.0/dev/recipe?advVersion=2` returns every rule in *both* encodings (flat
-  fields **and** `sensorModeData`) — and confirmed against the user's live rules:
+  **Exact layout** — from the app's own parser (`extractSensorData` in `aw4.java`, app 2.0.8,
+  entity `SensorModeData`), confirmed against the grow-stage templates (`recipe?advVersion=2`
+  returns every rule in both encodings) and the user's live rules:
 
-  | pos | meaning | evidence |
-  |-----|---------|----------|
-  | 0 | `sensorType` (0 probe °F, 1 probe °C, 2 probe humidity, 3 probe VPD, …) | sensor table |
-  | 1 | flag bits: `1` high trigger on, `2` low trigger on, `32` target on; `4` set whenever any switch is on; `8` (live rules) vs `16` (templates) unknown — possibly °C vs °F display unit or transition vs buffer | 16/21/22/55 in templates ↔ `auto*Switch`/`target*Switch`; 12/13/47 live |
-  | 2 | constant: `5` for temperature/humidity, `10` for VPD (value scale?) | all samples |
-  | 3 | transition (dynamic response) in sensor units (VPD ×10) | live rules 2 °F / 1 °C / 1 VPD, templates 0 |
-  | 4 | buffer (hysteresis) in sensor units (VPD ×10) | templates: `temperatureFBuff 2` → 2 (°F rec) / 1 (°C rec), `humidityBuff 2` → 2, `vpdBuff 1` → 1 |
-  | 6 | **target** | 75 °F / 24 °C / 65 % / 8 (=0.8 kPa) ↔ `targetTempF/targetTemp/targetHumi/targetVpd` |
-  | 8 | **high** threshold | 80 °F / 27 °C / 70 % ↔ `autoHighTemp*/autoHighHumi`; 194/90/100/99 = rail |
-  | 10 | **low** threshold | 70 °F / 21 °C / 60 % ↔ `autoLowTemp*/autoLowHumi`; 32/0 = rail |
-  | 5, 7, 9 | always 0 | — |
+  | byte(s) | meaning |
+  |---------|---------|
+  | 0 | `sensorType` (0 probe °F, 1 probe °C, 2 probe humidity, 3 probe VPD, 11 CO₂, 13 pH, …) |
+  | 1 | switch bits: `1` highSwitch, `2` lowSwitch, `4` targetSwitch, `8` transSwitch, `16` bufferSwitch, `32` autoOrTarget (1 = target mode, 0 = trigger mode) |
+  | 2 | precision codes: bits 2-3 → for the int16 values, bits 0-1 → for trans/buffer (`Sensor.getActualValueFloat`: code 0 ×10, 1 as is, 2 ÷10, 3 ÷100); observed `5` (=1/1) for temp & humidity, `10` (=2/2) for VPD |
+  | 3 | `transValue` (uint8) |
+  | 4 | `bufferValue` (uint8) |
+  | 5–6 | `targetValue` (int16 big-endian) |
+  | 7–8 | `highValue` (int16) |
+  | 9–10 | `lowValue` (int16) |
 
-  Target mode (bit 32) also carries the high/low switch bits with rail values, exactly like the
-  flat `targetVpd` rules do, so **bit 32 wins**: the user's port-3 VPD rule `[3,47,10,1,0,0,15,0,99,0,0]`
-  is a **1.5 kPa target**, not a low trigger. Temperature is stored twice (°F + °C record); the
+  After the precision step the app multiplies VPD and pH values by 10 (`getMultiplyBy`), so they
+  arrive as kPa×10 / pH×10 like the flat fields. Examples: user's port-3 VPD rule
+  `[3,47,10,1,0,0,15,0,99,0,0]` → flags 47 = 32+8+4+2+1 = **target mode**, transition, target 1.5 kPa
+  (high/low parked at rails); port-1 temperature `[1,13,5,1,0,0,0,0,25,0,0]` → 13 = 8+4+1 = trigger
+  mode with high 25 °C and transition 1 °C. Temperature is stored twice (°F + °C record); the
   server merges them into one °C entry. `tests/fixtures/recipe_v2.json` pins the decoder against
   all 30 template rules.
 

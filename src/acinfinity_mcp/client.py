@@ -309,6 +309,84 @@ def build_sign(
     return md5(left + right)
 
 
+# The 35 `devSetting` keys the app copies into a `modeAndSetting` PUT (ModesHModel, app 2.0.8).
+AI_SETTING_KEYS_IN_PUT: tuple[str, ...] = (
+    "offSpead",
+    "backlightSwitch",
+    "devCompany",
+    "devLight",
+    "devName",
+    "portParamData",
+    "ecOrTds",
+    "hasBacklightSwitch",
+    "hasKeytoneSwitch",
+    "isOnMinMaxTime",
+    "isOpenDoseTime",
+    "keytoneSwitch",
+    "loadType",
+    "offDoseTime",
+    "onDoseTime",
+    "onMaxTime",
+    "onMinTime",
+    "onTime",
+    "onTimeSwitch",
+    "otaUpdating",
+    "photocellSwitch",
+    "secFucDevEffect",
+    "secFucDevtype",
+    "secFucParamNums",
+    "secFucParams",
+    "secFucStatus",
+    "sensorOneType",
+    "sensorSettingStr",
+    "sensorTransBuffStr",
+    "sensorTwoType",
+    "subDeviceId",
+    "subDeviceType",
+    "subDeviceVersion",
+    "supportOta",
+    "zoneSensorType",
+)
+_FAHRENHEIT_CLAMP_KEYS = (
+    "devHtf",
+    "targetTempF",
+    "devLtf",
+    "waterTempTargetValueF",
+    "waterTempHighValueF",
+    "waterTempLowValueF",
+)
+
+
+def _app_mode_and_setting_payload(
+    existing: dict[str, Any], changes: dict[str, Any], device_name: str
+) -> dict[str, Any]:
+    """Build the `modeAndSetting` PUT exactly like the app: non-null mode fields (the app's
+    `transBean2Map` skips nulls), the 35 setting keys from `devSetting`, `devName` from the
+    port list, °F twins clamped to 32, and the id list for the resulting `atType`."""
+    setting = existing.get("devSetting") or {}
+    payload = {k: v for k, v in existing.items() if v is not None and k != "devSetting"}
+    payload.update({k: setting[k] for k in AI_SETTING_KEYS_IN_PUT if setting.get(k) is not None})
+    payload["devName"] = device_name
+    payload.update({k: v for k, v in changes.items() if v is not None})
+    for key in _FAHRENHEIT_CLAMP_KEYS:
+        if isinstance(payload.get(key), int) and payload[key] < 32:
+            payload[key] = 32
+    at_type = int(payload.get("atType") or Mode.OFF)
+    payload["modeAndSettingIdStr"] = _MODE_AND_SETTING_ID_STR.get(
+        at_type, _MODE_AND_SETTING_ID_STR_SENSOR
+    )
+    return {
+        k: (
+            json.dumps(v)
+            if isinstance(v, dict | list)
+            else str(v).lower()
+            if isinstance(v, bool)
+            else v
+        )
+        for k, v in payload.items()
+    }
+
+
 def _serialise(
     keys: tuple[str, ...], new: dict[str, Any], existing: dict[str, Any]
 ) -> dict[str, Any]:
@@ -623,27 +701,33 @@ class AcInfinityClient:
     async def update_device_settings(
         self, controller_id: str, port: int, device_name: str, changes: dict[str, Any]
     ) -> None:
-        """Read-modify-write of advanced settings (port 0 = controller), standard family.
+        """Read-modify-write of advanced settings (port 0 = controller).
 
-        AI controllers are refused: the only known path (a full-object `modeAndSetting` PUT)
-        renamed a port to "0" in a live test because `devSetting.devName` is null there.
-        The app writes AI settings with a minimal `modeAndSetting` PUT whose field-group ids
-        are not fully mapped yet — see docs/api/controls-and-settings.md.
+        Standard family: `updateAdvSetting` with the full `getDevSetting` object (signed).
+        AI family: the app's own `modeAndSetting` recipe (`ModesHModel.setSettingForNet`,
+        app 2.0.8): every non-null field of the mode object + the 35 setting keys in
+        `AI_SETTING_KEYS_IN_PUT` taken from `devSetting`, `devName` = current port name,
+        `modeAndSettingIdStr` for the current mode, °F twins clamped to >= 32.
         """
         await self.validate_port(controller_id, port, allow_zero=True)
+        if port:
+            await self.require_device(controller_id, port)
         is_ai, _ = await self.describe(controller_id)
-        if is_ai:
-            raise AcInfinityError(
-                "advanced settings writes are not supported on AI controllers yet "
-                "(the full-object path corrupts the port name)"
-            )
         async with self._lock:
-            body = await self._authed(
-                "POST", PATH_DEV_SETTING, data={"devId": controller_id, "port": port}
-            )
-            payload = _serialise(SETTING_KEYS, changes, body["data"])
-            payload["devName"] = device_name
-            await self._authed("POST", PATH_UPDATE_ADV_SETTING, data=payload, signed=True)
+            if is_ai:
+                existing = await self._get_port_settings(controller_id, port)
+                payload = _app_mode_and_setting_payload(existing, changes, device_name)
+                payload["devId"], payload["port"] = controller_id, port
+                await self._authed(
+                    "PUT", f"{PATH_MODE_AND_SETTING}?{urlencode(payload)}", min_version=True
+                )
+            else:
+                body = await self._authed(
+                    "POST", PATH_DEV_SETTING, data={"devId": controller_id, "port": port}
+                )
+                payload = _serialise(SETTING_KEYS, changes, body["data"])
+                payload["devName"] = device_name
+                await self._authed("POST", PATH_UPDATE_ADV_SETTING, data=payload, signed=True)
             self._device_cache = None
 
     async def rename_port(self, controller_id: str, port: int, name: str) -> None:

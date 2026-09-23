@@ -1,0 +1,4406 @@
+[
+ {
+  "file": "ic1.java",
+  "method": "GET",
+  "path": "/api/dev/data/attentions",
+  "name": "getAttentions",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.AttentionsBean>"
+ },
+ {
+  "file": "ic1.java",
+  "method": "DELETE",
+  "path": "/api/dev/data/attentions/{devId}/{type}",
+  "name": "deleteAttentions",
+  "params": [
+   [
+    "Path",
+    "devId"
+   ],
+   [
+    "Path",
+    "type"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "GET",
+  "path": "/api/dev/data/insightAC8K",
+  "name": "getInsightAC8K",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.InsightsResult>"
+ },
+ {
+  "file": "lo4.java",
+  "method": "POST",
+  "path": "/api/dev/ml",
+  "name": "update",
+  "params": [
+   [
+    "Field",
+    ""
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "lo4.java",
+  "method": "GET",
+  "path": "/api/dev/ml/byDevId/{devId}",
+  "name": "byDevId",
+  "params": [
+   [
+    "Path",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.NetMlInfo>"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "GET",
+  "path": "/api/dev/ml/byDevId/{devId}",
+  "name": "byDevId",
+  "params": [
+   [
+    "Path",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "PUT",
+  "path": "/api/dev/ml/dimLights",
+  "name": "dimLights",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "lo4.java",
+  "method": "GET",
+  "path": "/api/dev/ml/insight",
+  "name": "getAiInsightsByNet",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "seq"
+   ],
+   [
+    "Query",
+    "mark"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.AiInsightsNetBean>"
+ },
+ {
+  "file": "lo4.java",
+  "method": "DELETE",
+  "path": "/api/dev/ml/insight/aiMsg",
+  "name": "deleteAiInsight",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "seq"
+   ],
+   [
+    "Query",
+    "trigger"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "DELETE",
+  "path": "/api/dev/ml/insight/aiMsg",
+  "name": "deleteAiInsight",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "seq"
+   ],
+   [
+    "Query",
+    "trigger"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "lo4.java",
+  "method": "POST",
+  "path": "/api/dev/ml/insightForBle",
+  "name": "getAiInsightsByBle",
+  "params": [
+   [
+    "Field",
+    ""
+   ],
+   [
+    "Query",
+    "devVersion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.AiInsightsNetBean>"
+ },
+ {
+  "file": "lo4.java",
+  "method": "PUT",
+  "path": "/api/dev/ml/insightResult",
+  "name": "setinsightResult",
+  "params": [
+   [
+    "Field",
+    ""
+   ],
+   [
+    "Query",
+    "devVersion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "lo4.java",
+  "method": "GET",
+  "path": "/api/dev/ml/insightTime",
+  "name": "getAiInsightsTimeByNet",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "seq"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.RefreshTime"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "GET",
+  "path": "/api/dev/ml/insightTime",
+  "name": "getAiInsightsTime",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "seq"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "lo4.java",
+  "method": "PUT",
+  "path": "/api/dev/ml/insightTime/{devId}/{type}",
+  "name": "setInsightTime",
+  "params": [
+   [
+    "Path",
+    "devId"
+   ],
+   [
+    "Path",
+    "type"
+   ],
+   [
+    "Query",
+    "timeStamp"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "lo4.java",
+  "method": "GET",
+  "path": "/api/dev/ml/insightTimeForBle",
+  "name": "getAiInsightsTimeForBle",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "seq"
+   ],
+   [
+    "Query",
+    "zoneId"
+   ],
+   [
+    "Query",
+    "startTimeNight"
+   ],
+   [
+    "Query",
+    "endTimeNight"
+   ],
+   [
+    "Query",
+    "enctrNight"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Integer"
+ },
+ {
+  "file": "ic1.java",
+  "method": "PUT",
+  "path": "/api/dev/ml/loadType",
+  "name": "loadType",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "loadType"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "lo4.java",
+  "method": "POST",
+  "path": "/api/dev/ml/saveParams",
+  "name": "saveLike",
+  "params": [
+   [
+    "Field",
+    ""
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "lo4.java",
+  "method": "GET",
+  "path": "/api/dev/ml/secFuc",
+  "name": "getSecFucList",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.SecFun>"
+ },
+ {
+  "file": "lo4.java",
+  "method": "PUT",
+  "path": "/api/dev/ml/secFuc",
+  "name": "setSecFuc",
+  "params": [
+   [
+    "Query",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "lo4.java",
+  "method": "DELETE",
+  "path": "/api/dev/ml/stageInfo",
+  "name": "deleteStageInfo",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "seq"
+   ],
+   [
+    "Query",
+    "msgType"
+   ],
+   [
+    "Query",
+    "ignoreNextStageTips"
+   ],
+   [
+    "Query",
+    "dayNum"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "lo4.java",
+  "method": "GET",
+  "path": "/api/dev/ml/stageInfo",
+  "name": "getStageInfoByNet",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "seq"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.NetStageInfo>"
+ },
+ {
+  "file": "lo4.java",
+  "method": "POST",
+  "path": "/api/dev/ml/stageInfoForBle",
+  "name": "getStageInfoForBle",
+  "params": [
+   [
+    "Field",
+    ""
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.NetStageInfo>"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "PUT",
+  "path": "/api/dev/ml/tentWork",
+  "name": "tentWork",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "/api/dev/ml/updateLoadType",
+  "name": "updateLoadType",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "loadType"
+   ],
+   [
+    "Query",
+    "port"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "lo4.java",
+  "method": "GET",
+  "path": "/api/dev/sensorSetting",
+  "name": "getSensorSetting",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetDeviceSensorCali"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "DELETE",
+  "path": "/api/ipc/alert",
+  "name": "deleteIpcAlert",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "type"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "PUT",
+  "path": "/api/ipc/alert",
+  "name": "modifyIpcAlert",
+  "params": [
+   [
+    "Query",
+    "advId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "type"
+   ],
+   [
+    "Query",
+    "number"
+   ],
+   [
+    "Query",
+    "isOn"
+   ],
+   [
+    "Query",
+    "lowSwitch"
+   ],
+   [
+    "Query",
+    "highSwitch"
+   ],
+   [
+    "Query",
+    "lowValue"
+   ],
+   [
+    "Query",
+    "highValue"
+   ],
+   [
+    "Query",
+    "lowValueF"
+   ],
+   [
+    "Query",
+    "highValueF"
+   ],
+   [
+    "Query",
+    "alarmBeep"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "PUT",
+  "path": "/api/ipc/alertStatus",
+  "name": "updateAlertStatus",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "type"
+   ],
+   [
+    "Query",
+    "isOn"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "GET",
+  "path": "/api/ipc/alerts",
+  "name": "getIpcAlerts",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/bindingDevice",
+  "name": "bindingDevice",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "ipcMac"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/bindingDevice",
+  "name": "bindingDevice",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "ipcMac"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/closeKnowledge",
+  "name": "closeKnowledge",
+  "params": [
+   [
+    "Query",
+    "id"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/formattedSdCard",
+  "name": "formattedSdCard",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/formattedSdCard",
+  "name": "formattedSdCard",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [
+   "CONNECT_TIMEOUT:600000, READ_TIMEOUT:600000, WRITE_TIMEOUT:600000"
+  ],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getGptContent",
+  "name": "getGptContent",
+  "params": [
+   [
+    "Query",
+    "id"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getGptContenti6",
+  "name": "getChatGptContent",
+  "params": [
+   [
+    "Query",
+    "id"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getKnowledgeListi6",
+  "name": "getKnowledgeList",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getKnowledgeTab",
+  "name": "getKnowledgeTab",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/getP2PInfo",
+  "name": "getIpcInfo",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.IpcInfoBean"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getP2PInfo",
+  "name": "getIpcInfo",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/getServerIp",
+  "name": "getServerIp",
+  "params": [],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.IpcServerBean"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getServerIp",
+  "name": "getServerIp",
+  "params": [],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/getSettingInfo",
+  "name": "getSettingInfo",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.IpcSettingInfoBean"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getSettingInfo",
+  "name": "getSettingInfo",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getTrendsPinned",
+  "name": "getTrendsPinned",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "isLike"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getTrendsPinnedi6",
+  "name": "getTrendsPinnedi6",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "isLike"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/getUpgrade",
+  "name": "getUpgrade",
+  "params": [
+   [
+    "Query",
+    "fFamily"
+   ],
+   [
+    "Query",
+    "firmwareVersion"
+   ],
+   [
+    "Query",
+    "hardwareVersion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.FirmwareVersion"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getUpgrade",
+  "name": "getIpcUpgrade",
+  "params": [
+   [
+    "Query",
+    "fFamily"
+   ],
+   [
+    "Query",
+    "firmwareVersion"
+   ],
+   [
+    "Query",
+    "hardwareVersion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/getUpgradeProgress",
+  "name": "getUpgradeProgress",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [
+   "CONNECT_TIMEOUT:30000, READ_TIMEOUT:30000, WRITE_TIMEOUT:30000"
+  ],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "GET",
+  "path": "/api/ipc/intstr",
+  "name": "getIntstr",
+  "params": [],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/isBindingSucceed",
+  "name": "isBindingSucceed",
+  "params": [
+   [
+    "Query",
+    "appUserId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.IpcMacBean"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/isBindingSucceed",
+  "name": "isBindingSucceed",
+  "params": [
+   [
+    "Query",
+    "appUserId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/loadAlarmLogs",
+  "name": "getIpcAlarmLogs",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "pageNum"
+   ],
+   [
+    "Query",
+    "pageSize"
+   ],
+   [
+    "Query",
+    "id"
+   ],
+   [
+    "Query",
+    "time"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/loadAlarmLogs",
+  "name": "getIpcAlarmLogs",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "time"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/lockUnlockIpc",
+  "name": "lockUnlockIpc",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "lock"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/lockUnlockIpc",
+  "name": "lockUnlockIpc",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "lock"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/modIpcName",
+  "name": "modifyIpcName",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "ipcName"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/modIpcName",
+  "name": "modifyIpcName",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "ipcName"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/pauseCamera",
+  "name": "pauseCamera",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "pauseCamera"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/photoLogs",
+  "name": "getPhotoLogs",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "startTime"
+   ],
+   [
+    "Query",
+    "endTime"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.TimedPhotoBean>"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/photoLogs",
+  "name": "getPhotoLogs",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "startTime"
+   ],
+   [
+    "Query",
+    "endTime"
+   ],
+   [
+    "Query",
+    "category"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/photoLogs",
+  "name": "getPhotoLogs",
+  "params": [
+   [
+    "Body",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/photoLogsDate",
+  "name": "getPhotoLogsDate",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "startTime"
+   ],
+   [
+    "Query",
+    "endTime"
+   ],
+   [
+    "Query",
+    "category"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/querySdCardInfo",
+  "name": "querySdCardInfo",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.IpcSdCardBean"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/querySdCardInfo",
+  "name": "querySdCardInfo",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/rebootIpc",
+  "name": "rebootIpc",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/rebootIpc",
+  "name": "rebootIpc",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/reset",
+  "name": "resetIpc",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/sendLog",
+  "name": "sendIpcLog",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "errorCode"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Object"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/sendLog",
+  "name": "sendLog",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "GET",
+  "path": "/api/ipc/sensorCalibration",
+  "name": "getSensorCalibration",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "PUT",
+  "path": "/api/ipc/sensorCalibration",
+  "name": "sensorCalibration",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "leafTempCalF"
+   ],
+   [
+    "Query",
+    "leafTempCal"
+   ],
+   [
+    "Query",
+    "tempCalF"
+   ],
+   [
+    "Query",
+    "tempCal"
+   ],
+   [
+    "Query",
+    "humidCal"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/setAiFeedBack",
+  "name": "setAiFeedBack",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "knowledgeType"
+   ],
+   [
+    "Query",
+    "ktSubType"
+   ],
+   [
+    "Query",
+    "feedback"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/setAiLike",
+  "name": "setAiLike",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "knowledgeType"
+   ],
+   [
+    "Query",
+    "ktSubType"
+   ],
+   [
+    "Query",
+    "like"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/setAiReset",
+  "name": "setAiReset",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/setSubmit",
+  "name": "setSubmitFeedback",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "knowledgeType"
+   ],
+   [
+    "Query",
+    "ktSubType"
+   ],
+   [
+    "Query",
+    "feedbackType"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "/api/ipc/setSyncForH",
+  "name": "setSyncForH",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "isSync"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/setTrendsPinned",
+  "name": "setTrendsPinned",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Body",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/setting",
+  "name": "updateSettingInfo",
+  "params": [
+   [
+    "Field",
+    ""
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/setting",
+  "name": "updateCamareAI",
+  "params": [
+   [
+    "Field",
+    ""
+   ]
+  ],
+  "form": true,
+  "headers": [
+   "CONNECT_TIMEOUT:15000, READ_TIMEOUT:15000, WRITE_TIMEOUT:15000"
+  ],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/setting",
+  "name": "updateSettingInfo",
+  "params": [
+   [
+    "Field",
+    ""
+   ]
+  ],
+  "form": true,
+  "headers": [
+   "CONNECT_TIMEOUT:60000, READ_TIMEOUT:60000, WRITE_TIMEOUT:60000"
+  ],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/unbindingDevice",
+  "name": "unbindingDevice",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "ipcMac"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/unbindingDevice",
+  "name": "unbindingDevice",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "ipcMac"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/ipc/unbindingIpc",
+  "name": "unbindingIpc",
+  "params": [
+   [
+    "Query",
+    "appUserId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "clearData"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/unbindingIpc",
+  "name": "unbindingIpc",
+  "params": [
+   [
+    "Query",
+    "appUserId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "clearData"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/updateGptContent",
+  "name": "updateGptContent",
+  "params": [
+   [
+    "Query",
+    "id"
+   ],
+   [
+    "Query",
+    "content"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/upload/deletePhotos",
+  "name": "deletePhotos",
+  "params": [
+   [
+    "Body",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "/api/ipc/userConfirmUpgrade",
+  "name": "userConfirmUpgrade",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "version"
+   ],
+   [
+    "Query",
+    "fUrl"
+   ],
+   [
+    "Query",
+    "size"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "/api/ml/easymode/getMlRecipes",
+  "name": "getMlRecipes",
+  "params": [],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.MlRecipesBean>"
+ },
+ {
+  "file": "ga3.java",
+  "method": "POST",
+  "path": "/api/model/checkForApp",
+  "name": "checkModelUpdate",
+  "params": [
+   [
+    "Body",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.ModelCheckRes"
+ },
+ {
+  "file": "p2.java",
+  "method": "GET",
+  "path": "app/deviceTypeList",
+  "name": "getDeviceTypeList",
+  "params": [],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.DeviceSeriesGroup>"
+ },
+ {
+  "file": "p54.java",
+  "method": "GET",
+  "path": "app/generalNotice",
+  "name": "generalNotice",
+  "params": [
+   [
+    "Query",
+    "zoneId"
+   ],
+   [
+    "Query",
+    "hasFamilyH"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.MaintenanceNotice"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "app/getApplogBy",
+  "name": "getVersion",
+  "params": [
+   [
+    "Query",
+    "app_system"
+   ],
+   [
+    "Query",
+    "app_version"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "app/grade",
+  "name": "getGrade",
+  "params": [
+   [
+    "Query",
+    "grade"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Integer"
+ },
+ {
+  "file": "ic1.java",
+  "method": "GET",
+  "path": "app/loadType",
+  "name": "getLoadType",
+  "params": [
+   [
+    "Query",
+    "fFamily"
+   ],
+   [
+    "Query",
+    "firmwareVersion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.LoadTypeData>"
+ },
+ {
+  "file": "p54.java",
+  "method": "GET",
+  "path": "app/sysNotice",
+  "name": "sysNotice",
+  "params": [],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.MaintenanceNotice"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "auth/newToken",
+  "name": "getNewToken",
+  "params": [
+   [
+    "Query",
+    "appEmail"
+   ],
+   [
+    "Query",
+    "fcmToken"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.UserInfo"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "auth/refresh",
+  "name": "refresh",
+  "params": [
+   [
+    "Query",
+    "refreshToken"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.UserInfo"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/addAdvAlert",
+  "name": "addAdvInfo",
+  "params": [
+   [
+    "Query",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/addDevMode",
+  "name": "setModel",
+  "params": [
+   [
+    "Query",
+    ""
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [
+   "timeout:5"
+  ],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/calibrationSensor",
+  "name": "calibrationSensor",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "type"
+   ],
+   [
+    "Query",
+    "sensorPort"
+   ],
+   [
+    "Query",
+    "step"
+   ],
+   [
+    "Query",
+    "operateType"
+   ],
+   [
+    "Query",
+    "value"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/delADVInfo",
+  "name": "delADVInfo",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "advId"
+   ]
+  ],
+  "form": false,
+  "headers": [
+   "timeout:5"
+  ],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/function",
+  "name": "function",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "typeId"
+   ],
+   [
+    "Query",
+    "fUrl"
+   ],
+   [
+    "Query",
+    "unbindIpc"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/getDevSetting",
+  "name": "getDevSetting",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "port"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetDeviceSetting"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/getDevTimeZone",
+  "name": "getDevTimeZone",
+  "params": [],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.TimeZone>"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/getDeviceInfo",
+  "name": "getDeviceInfo",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetDevice"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/getSockerIp",
+  "name": "getSockerIp",
+  "params": [
+   [
+    "Header",
+    "devType"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetServe"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/getSockerIp",
+  "name": "getSockerIp",
+  "params": [
+   [
+    "Header",
+    "devType"
+   ],
+   [
+    "Query",
+    "firmwareVersion"
+   ],
+   [
+    "Query",
+    "hardwareVersion"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetServe"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/getdevADVinfoBydevId",
+  "name": "getADVInfoList",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.NetAdvance>"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/getdevModeSettingList",
+  "name": "getModeSettingList",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "port"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetDeviceMode"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/initClockSetting",
+  "name": "syncTime",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "xq.java",
+  "method": "PUT",
+  "path": "dev/ml/restore",
+  "name": "restoreML",
+  "params": [
+   [
+    "Field",
+    "devId"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "PUT",
+  "path": "dev/modeAndSetting",
+  "name": "updateModeAndSetting",
+  "params": [
+   [
+    "Query",
+    ""
+   ],
+   [
+    "Query",
+    "modeAndSettingIdStr"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/netWorkSetting",
+  "name": "netWorkSetting",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "wifiName"
+   ],
+   [
+    "Query",
+    "wifiPwd"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/outletSwitch",
+  "name": "outletSwitch",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "androidx.core.app.NotificationCompat.CATEGORY_STATUS"
+   ]
+  ],
+  "form": false,
+  "headers": [
+   "timeout:5"
+  ],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/putDevTimeZone",
+  "name": "putDevTimeZone",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "timeZone"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "xq.java",
+  "method": "PUT",
+  "path": "dev/restoreDevMode",
+  "name": "restoreDevMode",
+  "params": [
+   [
+    "Field",
+    "devModeStr"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "xq.java",
+  "method": "PUT",
+  "path": "dev/restoreDevSetting",
+  "name": "restoreDevSetting",
+  "params": [
+   [
+    "Field",
+    "devSettingStr"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "xq.java",
+  "method": "PUT",
+  "path": "dev/restoreModeAndSetting",
+  "name": "restoreModeAndSetting",
+  "params": [
+   [
+    "Field",
+    "devId"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "PUT",
+  "path": "dev/scene",
+  "name": "updateScene",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "type"
+   ],
+   [
+    "Query",
+    "scene"
+   ],
+   [
+    "Query",
+    "sceneFeedback"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "PUT",
+  "path": "dev/sceneBle",
+  "name": "updateSceneBle",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "type"
+   ],
+   [
+    "Query",
+    "scene"
+   ],
+   [
+    "Query",
+    "sceneFeedback"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/updateADVStatus",
+  "name": "updateADVStatus",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "advId"
+   ]
+  ],
+  "form": false,
+  "headers": [
+   "timeout:5"
+  ],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/updateAdvSetting",
+  "name": "updateSetting",
+  "params": [
+   [
+    "Query",
+    ""
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "dev/updateMsterByNums",
+  "name": "updateMsterPort",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "nums"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "email/sendEmail",
+  "name": "sendEmail",
+  "params": [
+   [
+    "Query",
+    "appEmail"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "email/sendEmailCodeIsOK",
+  "name": "emailVerify",
+  "params": [
+   [
+    "Query",
+    "appEmail"
+   ],
+   [
+    "Query",
+    "emailCode"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "http://192.168.0.238:8080/api/chat/question",
+  "name": "chatMessage1",
+  "params": [
+   [
+    "Query",
+    "chatId"
+   ],
+   [
+    "Query",
+    "message"
+   ],
+   [
+    "Query",
+    "token"
+   ]
+  ],
+  "form": false,
+  "headers": [
+   "Authorization: application-846a0354facdff07743a68e50a6b8990"
+  ],
+  "returns": null
+ },
+ {
+  "file": "cy3.java",
+  "method": "POST",
+  "path": "http://192.168.0.67/write/",
+  "name": "write",
+  "params": [
+   [
+    "Field",
+    ""
+   ]
+  ],
+  "form": true,
+  "headers": [
+   "timeout:5"
+  ],
+  "returns": "java.lang.String"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "GET",
+  "path": "http://chatbox-us.acinfinityserver.com/api/application/b6af55a8-e9b1-11ef-b4c7-0afff3eb6ed3/chat/open",
+  "name": "getChatId",
+  "params": [],
+  "form": false,
+  "headers": [
+   "Authorization: application-846a0354facdff07743a68e50a6b8990"
+  ],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "http://chatbox-us.acinfinityserver.com/api/application/chat_message/{id}",
+  "name": "chatMessage",
+  "params": [
+   [
+    "Path",
+    "id"
+   ],
+   [
+    "Body",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [
+   "Authorization: application-846a0354facdff07743a68e50a6b8990"
+  ],
+  "returns": null
+ },
+ {
+  "file": "ic1.java",
+  "method": "DELETE",
+  "path": "ipc/alert",
+  "name": "delIPCAlarmsById",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "type"
+   ],
+   [
+    "Query",
+    "isOn"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "ipc/alert",
+  "name": "addIPCAlarms",
+  "params": [
+   [
+    "Query",
+    ""
+   ],
+   [
+    "Query",
+    "returnData"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetAlarm"
+ },
+ {
+  "file": "ic1.java",
+  "method": "PUT",
+  "path": "ipc/alert",
+  "name": "updateIPCAlarmsById",
+  "params": [
+   [
+    "Query",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetAlarm"
+ },
+ {
+  "file": "ic1.java",
+  "method": "PUT",
+  "path": "ipc/alertStatus",
+  "name": "updateIPCAlertStatus",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "type"
+   ],
+   [
+    "Query",
+    "isOn"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ty3.java",
+  "method": "POST",
+  "path": "ipc/loadAlarmLogs",
+  "name": "getIpcAlarmLogs",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "id"
+   ],
+   [
+    "Query",
+    "time"
+   ],
+   [
+    "Query",
+    "pageSize"
+   ],
+   [
+    "Query",
+    "pageNum"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetLogData"
+ },
+ {
+  "file": "ic1.java",
+  "method": "GET",
+  "path": "ipc/sensorCalibration",
+  "name": "getIpcSensorCalibration",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.SensorCalibration"
+ },
+ {
+  "file": "ic1.java",
+  "method": "PUT",
+  "path": "ipc/sensorCalibration",
+  "name": "setIpcSensorCalibration",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "leafTempCalF"
+   ],
+   [
+    "Query",
+    "leafTempCal"
+   ],
+   [
+    "Query",
+    "tempCalF"
+   ],
+   [
+    "Query",
+    "tempCal"
+   ],
+   [
+    "Query",
+    "humidCal"
+   ]
+  ],
+  "form": false,
+  "headers": [
+   "timeout:5"
+  ],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "p2.java",
+  "method": "GET",
+  "path": "language/languageDataByVersion",
+  "name": "getLanguageList",
+  "params": [
+   [
+    "Query",
+    "languageVersion"
+   ],
+   [
+    "Query",
+    "lastTime"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.LanguageResponse"
+ },
+ {
+  "file": "ty3.java",
+  "method": "DELETE",
+  "path": "log/data",
+  "name": "deleteData",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "time"
+   ],
+   [
+    "Header",
+    "devType"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ty3.java",
+  "method": "POST",
+  "path": "log/dataPage",
+  "name": "getDataListPage",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "time"
+   ],
+   [
+    "Query",
+    "pageSize"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetHistoryData"
+ },
+ {
+  "file": "ty3.java",
+  "method": "POST",
+  "path": "log/dataPage",
+  "name": "getDataListPage",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "time"
+   ],
+   [
+    "Query",
+    "endTime"
+   ],
+   [
+    "Query",
+    "pageSize"
+   ],
+   [
+    "Query",
+    "orderDirection"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetHistoryData"
+ },
+ {
+  "file": "ty3.java",
+  "method": "DELETE",
+  "path": "log/log",
+  "name": "deleteLog",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "time"
+   ],
+   [
+    "Header",
+    "devType"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ty3.java",
+  "method": "POST",
+  "path": "log/logdataByAll",
+  "name": "getLogList",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "id"
+   ],
+   [
+    "Query",
+    "time"
+   ],
+   [
+    "Query",
+    "pageSize"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetLogData"
+ },
+ {
+  "file": "ty3.java",
+  "method": "POST",
+  "path": "log/logdataByAll",
+  "name": "getLogList",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "id"
+   ],
+   [
+    "Query",
+    "time"
+   ],
+   [
+    "Query",
+    "endTime"
+   ],
+   [
+    "Query",
+    "pageSize"
+   ],
+   [
+    "Query",
+    "orderDirection"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetLogData"
+ },
+ {
+  "file": "p2.java",
+  "method": "GET",
+  "path": "lwa/preAuth",
+  "name": "getAccountLink",
+  "params": [],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.AccountLinkData"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "ota/getUpgrade",
+  "name": "getChildOtaInfo",
+  "params": [
+   [
+    "Query",
+    "type"
+   ],
+   [
+    "Query",
+    "firmwareVersion"
+   ],
+   [
+    "Query",
+    "command"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.ChildFirmwareVersion"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "ota/initOtaUpgrade",
+  "name": "otaUpgrade",
+  "params": [
+   [
+    "Query",
+    "version"
+   ],
+   [
+    "Query",
+    "port"
+   ],
+   [
+    "Query",
+    "subDeviceId"
+   ],
+   [
+    "Query",
+    "fileUrl"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "subDeviceType"
+   ],
+   [
+    "Query",
+    "devMacAddr"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.Map<java.lang.String, java.lang.Object>"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "ota/otaUpgradeResult",
+  "name": "otaUpgradeResult",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "port"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.OtaResult"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "ota/retryOtaUpgrade",
+  "name": "retryOtaUpgrade",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "port"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "xb7.java",
+  "method": "GET",
+  "path": "tags/list",
+  "name": "getList",
+  "params": [],
+  "form": false,
+  "headers": [],
+  "returns": "defpackage.el3"
+ },
+ {
+  "file": "ic1.java",
+  "method": "DELETE",
+  "path": "upgrade/backup",
+  "name": "deleteBackup",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "GET",
+  "path": "upgrade/backup",
+  "name": "getBackup",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "devVersion"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.BackupData"
+ },
+ {
+  "file": "xq.java",
+  "method": "GET",
+  "path": "upgrade/backup",
+  "name": "getBackup",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "devVersion"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetBackups"
+ },
+ {
+  "file": "xq.java",
+  "method": "GET",
+  "path": "upgrade/backup",
+  "name": "getBackup",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetBackups"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "upgrade/backup",
+  "name": "addBackup",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "devVersion"
+   ],
+   [
+    "Query",
+    "data"
+   ],
+   [
+    "Query",
+    "firmwareVersion"
+   ],
+   [
+    "Query",
+    "fFamily"
+   ],
+   [
+    "Query",
+    "hardwareVersion"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.BackupData"
+ },
+ {
+  "file": "xq.java",
+  "method": "POST",
+  "path": "upgrade/backup",
+  "name": "addBackup",
+  "params": [
+   [
+    "Field",
+    "devMacAddr"
+   ],
+   [
+    "Field",
+    "devVersion"
+   ],
+   [
+    "Field",
+    "data"
+   ],
+   [
+    "Field",
+    "firmwareVersion"
+   ],
+   [
+    "Field",
+    "fFamily"
+   ],
+   [
+    "Field",
+    "hardwareVersion"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "com.eternal.base.concat.BackupData"
+ },
+ {
+  "file": "xq.java",
+  "method": "POST",
+  "path": "upgrade/backup",
+  "name": "addBackupWiFi",
+  "params": [
+   [
+    "Field",
+    "devMacAddr"
+   ],
+   [
+    "Field",
+    "devVersion"
+   ],
+   [
+    "Field",
+    "firmwareVersion"
+   ],
+   [
+    "Field",
+    "fFamily"
+   ],
+   [
+    "Field",
+    "hardwareVersion"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "PUT",
+  "path": "upgrade/backup",
+  "name": "setBackupStatus",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "androidx.core.app.NotificationCompat.CATEGORY_STATUS"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "xq.java",
+  "method": "PUT",
+  "path": "upgrade/backup",
+  "name": "updateBackup",
+  "params": [
+   [
+    "Field",
+    "devMacAddr"
+   ],
+   [
+    "Field",
+    "androidx.core.app.NotificationCompat.CATEGORY_STATUS"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "upgrade/downgrade",
+  "name": "getRevertFirmware",
+  "params": [
+   [
+    "Query",
+    "firmwareVersion"
+   ],
+   [
+    "Query",
+    "fFamily"
+   ],
+   [
+    "Query",
+    "hardwareVersion"
+   ],
+   [
+    "Query",
+    "devMacAddr"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.FirmwareVersion"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "upgrade/getUpgrade",
+  "name": "getFirmwareVersion",
+  "params": [
+   [
+    "Query",
+    "fFamily"
+   ],
+   [
+    "Query",
+    "firmwareVersion"
+   ],
+   [
+    "Query",
+    "hardwareVersion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.FirmwareVersion"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "upgrade/updateRecord",
+  "name": "updateFirmwareVersion",
+  "params": [
+   [
+    "Query",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "user/addAPPUser",
+  "name": "addAPPUser",
+  "params": [
+   [
+    "Query",
+    "appEmail"
+   ],
+   [
+    "Query",
+    "appPasswordl"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.UserInfo"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/addAppDevInfo",
+  "name": "bindDev",
+  "params": [
+   [
+    "Query",
+    "appUserId"
+   ],
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "timeGmt"
+   ],
+   [
+    "Query",
+    "zoneId"
+   ],
+   [
+    "Query",
+    "devName"
+   ],
+   [
+    "Query",
+    "devExternalVos"
+   ],
+   [
+    "Query",
+    "advNameList"
+   ],
+   [
+    "Query",
+    "alertNameList"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "user/addUserFeedBack",
+  "name": "addUserFeedBack",
+  "params": [
+   [
+    "Query",
+    "gradeId"
+   ],
+   [
+    "Query",
+    "tagsId"
+   ],
+   [
+    "Query",
+    "fbackEmail"
+   ],
+   [
+    "Query",
+    "fbackTitle"
+   ],
+   [
+    "Query",
+    "fbackText"
+   ],
+   [
+    "Query",
+    "fbackInformation"
+   ],
+   [
+    "Part",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "user/appUserLogin",
+  "name": "userLogin",
+  "params": [
+   [
+    "Query",
+    "appEmail"
+   ],
+   [
+    "Query",
+    "appPasswordl"
+   ],
+   [
+    "Query",
+    "fcmToken"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.UserInfo"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/bindingDev",
+  "name": "bindingDev",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Query",
+    "timeGmt"
+   ],
+   [
+    "Query",
+    "zoneId"
+   ],
+   [
+    "Query",
+    "devName"
+   ],
+   [
+    "Query",
+    "devExternalVos"
+   ],
+   [
+    "Query",
+    "advNameList"
+   ],
+   [
+    "Query",
+    "alertNameList"
+   ],
+   [
+    "Query",
+    "insideRoomName"
+   ],
+   [
+    "Query",
+    "outsideRoomName"
+   ],
+   [
+    "Query",
+    "deviceColor"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "GET",
+  "path": "user/bindingDevResult",
+  "name": "bindingDevResult",
+  "params": [
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Long"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "POST",
+  "path": "user/boarding",
+  "name": "newBindingDevice",
+  "params": [
+   [
+    "Field",
+    "snCode"
+   ],
+   [
+    "Field",
+    "appId"
+   ],
+   [
+    "Field",
+    "devType"
+   ],
+   [
+    "Field",
+    "firmwareVersion"
+   ],
+   [
+    "Field",
+    "hardwareVersion"
+   ],
+   [
+    "Field",
+    "requestId"
+   ],
+   [
+    "Field",
+    "zoneId"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "GET",
+  "path": "user/boardingResult",
+  "name": "isBindingSucceedNew",
+  "params": [
+   [
+    "Query",
+    "snCode"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/delAppDev",
+  "name": "unbindDev",
+  "params": [
+   [
+    "Query",
+    "appUserId"
+   ],
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "isDelAdvAll"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/delAppShareDev",
+  "name": "delShareDev",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "androidx.core.app.NotificationCompat.CATEGORY_EMAIL"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/delDevNetWorkInfo",
+  "name": "delDevNetWorkInfo",
+  "params": [
+   [
+    "Query",
+    "appUserId"
+   ],
+   [
+    "Query",
+    "devMacAddr"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/delShareDev",
+  "name": "cancelShareDev",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "androidx.core.app.NotificationCompat.CATEGORY_EMAIL"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "user/delUserInfo",
+  "name": "delUserInfo",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/devInfoListAll",
+  "name": "devInfoListAll",
+  "params": [
+   [
+    "Query",
+    "userId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.NetDevice>"
+ },
+ {
+  "file": "DeviceApiService.java",
+  "method": "POST",
+  "path": "user/devInfoListAll",
+  "name": "devInfoListAll",
+  "params": [
+   [
+    "Query",
+    "userId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/devIsShareOk",
+  "name": "acceptShare",
+  "params": [
+   [
+    "Query",
+    "id"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/devShaerUserEmail",
+  "name": "shareDev",
+  "params": [
+   [
+    "Query",
+    "userId"
+   ],
+   [
+    "Query",
+    "appEmail"
+   ],
+   [
+    "Query",
+    "devId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/devShareUser",
+  "name": "shareWithOtherDevList",
+  "params": [
+   [
+    "Query",
+    "userId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.NetDevice>"
+ },
+ {
+  "file": "p2.java",
+  "method": "DELETE",
+  "path": "user/fcmToken",
+  "name": "unregisterFcmToken",
+  "params": [
+   [
+    "Query",
+    "fcmToken"
+   ],
+   [
+    "Header",
+    "token"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "user/fcmToken",
+  "name": "registerFcmToken",
+  "params": [
+   [
+    "Query",
+    "fcmToken"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "IpcApiService.java",
+  "method": "GET",
+  "path": "user/freeDevice",
+  "name": "freeDevice",
+  "params": [
+   [
+    "Query",
+    "userId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": null
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "user/getByUser",
+  "name": "getByUser",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.UserInfo"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "user/getByUserEmail",
+  "name": "getByUserEmail",
+  "params": [
+   [
+    "Query",
+    "appEmail"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "user/logout",
+  "name": "logout",
+  "params": [
+   [
+    "Query",
+    "fcmToken"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "user/shareDevList",
+  "name": "shareWithYouDevList",
+  "params": [
+   [
+    "Query",
+    "userId"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.NetDevice>"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "user/updateAPPUser",
+  "name": "updateAPPUser",
+  "params": [
+   [
+    "Query",
+    "appId"
+   ],
+   [
+    "Query",
+    "appIsanalytics"
+   ],
+   [
+    "Query",
+    "appIsbugreport"
+   ],
+   [
+    "Query",
+    "appIsemailrepost"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.String"
+ },
+ {
+  "file": "p2.java",
+  "method": "POST",
+  "path": "user/updateAPPUserPassword",
+  "name": "updatePassword",
+  "params": [
+   [
+    "Query",
+    "appEmail"
+   ],
+   [
+    "Query",
+    "appPasswordl"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/addAlarms",
+  "name": "addAlarms",
+  "params": [
+   [
+    "Query",
+    ""
+   ],
+   [
+    "Query",
+    "returnData"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetAlarm"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/addGroups",
+  "name": "addGroups",
+  "params": [
+   [
+    "Query",
+    ""
+   ],
+   [
+    "Query",
+    "returnData"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetAutomation"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/advUpdateBatch",
+  "name": "updatePortStateForGroup",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "devAdvGroupsStr"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/delAdvbatch",
+  "name": "delAdvbatch",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "groupNums"
+   ],
+   [
+    "Query",
+    "port"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/delAlarmsByid",
+  "name": "delAlarmsById",
+  "params": [
+   [
+    "Query",
+    ""
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/delByid",
+  "name": "delAdvById",
+  "params": [
+   [
+    "Query",
+    "advId"
+   ],
+   [
+    "Query",
+    "isDel"
+   ],
+   [
+    "Query",
+    "isflag"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/getAlarms",
+  "name": "getAlarms",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.NetAlarm>"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/getGroups",
+  "name": "getGroups",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.NetAutomation>"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/groupsFromRecipe",
+  "name": "addGroupsFromRecipe",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "devAdvGroupsStr"
+   ],
+   [
+    "Query",
+    "isResetRecipe"
+   ],
+   [
+    "Query",
+    "returnData"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.NetAutomation>"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/home/delAdv",
+  "name": "delAdvById2",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "groupNum"
+   ],
+   [
+    "Query",
+    "isDel"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/home/switchAdv",
+  "name": "switchAdv",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "isOn"
+   ],
+   [
+    "Query",
+    "groupNums"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/portStateForGroup",
+  "name": "updatePortStateForGroup",
+  "params": [
+   [
+    "Query",
+    "devId"
+   ],
+   [
+    "Query",
+    "groupNums"
+   ],
+   [
+    "Query",
+    "port"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "GET",
+  "path": "version=2.0/dev/recipe",
+  "name": "getAdvRecipeList",
+  "params": [
+   [
+    "Query",
+    "advVersion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.util.List<com.eternal.base.concat.AutomationTemplate>"
+ },
+ {
+  "file": "xq.java",
+  "method": "PUT",
+  "path": "version=2.0/dev/restoreAdv",
+  "name": "restoreAdvGroups",
+  "params": [
+   [
+    "Field",
+    "devAdvGroupsStr"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.util.List<java.lang.Object>"
+ },
+ {
+  "file": "xq.java",
+  "method": "PUT",
+  "path": "version=2.0/dev/restoreAdv",
+  "name": "restoreAdvGroupsH",
+  "params": [
+   [
+    "Field",
+    "devId"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.util.List<java.lang.Object>"
+ },
+ {
+  "file": "xq.java",
+  "method": "PUT",
+  "path": "version=2.0/dev/restoreAlarms",
+  "name": "restoreAdvAlert",
+  "params": [
+   [
+    "Field",
+    "devAdvAlarmsStr"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "xq.java",
+  "method": "PUT",
+  "path": "version=2.0/dev/restoreAlarms",
+  "name": "restoreAdvAlertH",
+  "params": [
+   [
+    "Field",
+    "devId"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": true,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/updateAdvInfo",
+  "name": "updateAdvInfo",
+  "params": [
+   [
+    "Query",
+    ""
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/updateAlarmsById",
+  "name": "updateAlarmsById",
+  "params": [
+   [
+    "Query",
+    ""
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetAlarm"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/updateChildGroupSort",
+  "name": "updateChildGroupSort",
+  "params": [
+   [
+    "Query",
+    ""
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/updateGroupsById",
+  "name": "updateGroupsById",
+  "params": [
+   [
+    "Query",
+    ""
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "com.eternal.base.concat.NetAutomation"
+ },
+ {
+  "file": "ic1.java",
+  "method": "POST",
+  "path": "version=2.0/dev/updateGroupsIsOn",
+  "name": "updateGroupsIsOn",
+  "params": [
+   [
+    "Query",
+    "advId"
+   ],
+   [
+    "Query",
+    "isDel"
+   ],
+   [
+    "Query",
+    "isflag"
+   ],
+   [
+    "Header",
+    "minversion"
+   ]
+  ],
+  "form": false,
+  "headers": [],
+  "returns": "java.lang.Void"
+ }
+]
