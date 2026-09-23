@@ -7,6 +7,7 @@ from acinfinity_mcp.client import (
     PATH_LOGIN,
     PATH_MODE_AND_SETTING,
     PATH_UPDATE_ADV_SETTING,
+    PATH_V2_TOGGLE_GROUP,
     AuthError,
 )
 from tests.conftest import AI_ID, STD_ID
@@ -67,12 +68,38 @@ async def test_ai_control_write_uses_add_dev_mode_with_minversion(client, api):
     assert api.writes(PATH_MODE_AND_SETTING) == []
 
 
-async def test_ai_settings_write_uses_put_mode_and_setting(client, api):
-    await client.update_device_settings(AI_ID, 1, "Abluft", {"loadType": 129})
+async def test_ai_settings_write_is_refused(client, api):
+    from acinfinity_mcp.client import AcInfinityError
+
+    with pytest.raises(AcInfinityError, match="not supported on AI"):
+        await client.update_device_settings(AI_ID, 1, "Abluft", {"loadType": 129})
+    assert api.writes(PATH_MODE_AND_SETTING) == []
+
+
+async def test_ai_rename_is_minimal_put_with_group_17(client, api):
+    await client.rename_port(AI_ID, 1, "Exhaust")
     (query,) = api.writes(PATH_MODE_AND_SETTING)
-    assert query["loadType"] == "129"
-    assert query["modeAndSettingIdStr"] == "[16,17]"  # port is Off in the fixture
-    assert "devCompany" in query  # flattened devSetting key
+    assert query["devName"] == "Exhaust" and query["atType"] == "1"
+    assert query["modeAndSettingIdStr"] == "[16,17]" and query["offSpead"] == "0"
+    assert "onSpead" not in query  # only the listed group's fields travel
+
+
+async def test_standard_writes_are_signed(client, api):
+    await client.update_port_controls(STD_ID, 1, {"atType": 2})
+    headers = next(h for m, p, h in api.headers if p == PATH_ADD_DEV_MODE)
+    assert headers["version"] == "2.0.8" and len(headers["sign"]) == 32
+    assert headers["requestapp"] == "app-x" and "minversion" not in headers
+    await client.update_port_controls(AI_ID, 1, {"atType": 2})
+    ai_headers = [h for m, p, h in api.headers if p == PATH_ADD_DEV_MODE][-1]
+    assert "sign" not in ai_headers and ai_headers["minversion"] == "3.5"
+
+
+async def test_toggle_automation_only_when_state_differs(client, api):
+    await client.set_automation_enabled(AI_ID, 2596136, True)  # already on in the fixture
+    assert api.writes(PATH_V2_TOGGLE_GROUP) == []
+    await client.set_automation_enabled(AI_ID, 2596136, False)
+    (form,) = api.writes(PATH_V2_TOGGLE_GROUP)
+    assert form == {"advId": "2596136", "isDel": "0", "isflag": "1"}
 
 
 async def _no_sleep(_: float) -> None:
@@ -93,3 +120,13 @@ async def test_port_out_of_range_is_rejected_before_write(client, api):
     with pytest.raises(AcInfinityError, match="has ports 1-4"):
         await client.update_port_controls(STD_ID, 7, {"atType": 2})
     assert api.writes(PATH_ADD_DEV_MODE) == []
+
+
+async def test_write_to_empty_port_is_refused(client, api):
+    from acinfinity_mcp.client import AcInfinityError
+
+    with pytest.raises(AcInfinityError, match="no device plugged in"):
+        await client.rename_port(AI_ID, 8, "x")  # port 8: online 0, portResistance 65535
+    with pytest.raises(AcInfinityError, match="no device plugged in"):
+        await client.update_port_controls(AI_ID, 8, {"atType": 2})
+    assert api.writes(PATH_MODE_AND_SETTING) == [] and api.writes(PATH_ADD_DEV_MODE) == []

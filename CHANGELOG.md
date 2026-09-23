@@ -17,6 +17,21 @@ All notable changes to this project are documented here. The format follows
 - API documentation in `docs/api/` distilled from the Home Assistant integration, the
   ober37/ac-infinity-mcp quirk list and live captures.
 
+### Added (backup & rename)
+- `backup_settings`, `list_backups`, `compare_backup`, `restore_settings`: full-configuration
+  backups as local JSON, field-level diff against the live device, and restore of changed
+  ports (full `addDevMode` round trip) and automation rules (`updateGroupsById`).
+- `rename_port` — app-native minimal `modeAndSetting` PUT on AI controllers, `updateAdvSetting`
+  on standard ones. Writes to ports with nothing plugged in are refused up front (the
+  controller answers `999999`).
+- Standard-controller writes carry the app's request signature (`sign`/`requestId`/`version`
+  headers, algorithm from the decompiled Android app via Backroads4Me's fork).
+
+### Removed
+- The full-object `modeAndSetting` PUT for AI advanced settings: it renamed a port to "0"
+  in a live test because `devSetting.devName` is null on AI controllers. AI advanced-settings
+  writes are refused until the app's field-group ids are mapped.
+
 ### Changed
 - Port control writes go to `addDevMode` as form body on both families, with the
   `minversion: 3.5` header on AI controllers — verified live (Timer-to-On round trip on an

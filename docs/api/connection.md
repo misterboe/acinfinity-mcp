@@ -58,6 +58,25 @@ No token expiry has been observed; the HA integration logs in once at startup an
 `is_logged_in()` is false (i.e. never on its own). A robust client should re-login on a non-200 body code
 from an authenticated call and retry once.
 
+## Signed writes (standard controllers)
+
+The login response also returns `secretId`, `requestApp`, `refreshToken` and `timeOut`. According
+to the decompiled Android app 2.0.8 (Backroads4Me/homeassistant-acinfinity, branch
+`dalinicus-port`), standard controllers (devType 11/18) apply a settings write only when the
+request carries the app's signature headers:
+
+```
+requestApp: <from login>
+version:    2.0.8
+requestId:  <unix ms>
+sign:       md5( md5(token + version) + md5(secretId + requestApp + requestId) )
+```
+
+Unsigned writes are answered `403 "Login Expired"` there. The v2 (`version=2.0`) endpoints
+**reject** these headers with the same 403, so signing is per call. AI controllers accept
+unsigned writes with `minversion: 3.5`. This server signs standard-family writes; not verified
+on our hardware (no standard controller on the account).
+
 ## Response envelope
 
 Every endpoint returns HTTP 200 with a JSON envelope:

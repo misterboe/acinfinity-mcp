@@ -24,6 +24,8 @@ from acinfinity_mcp.client import (
     PATH_UPDATE_ADV_SETTING,
     PATH_V2_ALARMS,
     PATH_V2_GROUPS,
+    PATH_V2_TOGGLE_GROUP,
+    PATH_V2_UPDATE_GROUP,
     AcInfinityClient,
 )
 
@@ -48,6 +50,7 @@ class FakeApi:
     """Records every request; `calls` is a list of (method, path, form-dict, query-dict)."""
 
     calls: list[tuple[str, str, dict[str, str], dict[str, str]]] = field(default_factory=list)
+    headers: list[tuple[str, str, dict[str, str]]] = field(default_factory=list)
     fail_login: bool = False
     flaky_once: bool = False
 
@@ -56,11 +59,19 @@ class FakeApi:
         form = {k: v[0] for k, v in parse_qs(request.content.decode()).items()}
         query = {k: v[0] for k, v in parse_qs(request.url.query.decode()).items()}
         self.calls.append((request.method, path, form, query))
+        self.headers.append((request.method, path, dict(request.headers)))
 
         if path == PATH_LOGIN:
             if self.fail_login:
                 return envelope(None, code=10000)
-            return envelope({"appId": TOKEN, "appEmail": form["appEmail"]})
+            return envelope(
+                {
+                    "appId": TOKEN,
+                    "appEmail": form["appEmail"],
+                    "secretId": "sec",
+                    "requestApp": "app-x",
+                }
+            )
 
         assert request.headers.get("token") == TOKEN, "authenticated call without token"
         assert request.headers.get("User-Agent") == "okhttp/4.12.0"
@@ -90,6 +101,10 @@ class FakeApi:
         if path == PATH_MODE_AND_SETTING:
             assert request.method == "PUT"
             assert request.headers.get("minversion") == "3.5"
+            assert "modeAndSettingIdStr" in query and "atType" in query
+            return envelope(None)
+        if path in (PATH_V2_UPDATE_GROUP, PATH_V2_TOGGLE_GROUP):
+            assert "version" not in request.headers and "sign" not in request.headers
             return envelope(None)
         return httpx2.Response(404)
 

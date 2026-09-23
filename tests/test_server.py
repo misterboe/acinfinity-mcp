@@ -109,3 +109,60 @@ async def test_list_automations(connect: Connect):
     rules = result.structured_content["rules"]
     assert [r["mode"] for r in rules] == ["Auto", "On", "VPD"]
     assert rules[2]["thresholds"][0]["sensor_kind"] == "vpd"
+
+
+async def test_backup_compare_restore_roundtrip(
+    connect: Connect, api: FakeApi, tmp_path, monkeypatch
+):
+    from acinfinity_mcp.client import PATH_ADD_DEV_MODE, PATH_V2_UPDATE_GROUP
+
+    monkeypatch.setenv("ACINFINITY_BACKUP_DIR", str(tmp_path))
+    async with connect() as c:
+        info = (
+            await c.call_tool("backup_settings", {"controller_id": AI_ID, "label": "t"})
+        ).structured_content
+        assert info["ports"] == 8 and info["automation_rules"] == 3
+        listed = (await c.call_tool("list_backups", {})).structured_content
+        assert [b["backup_id"] for b in listed["backups"]] == [info["backup_id"]]
+        cmp = (
+            await c.call_tool("compare_backup", {"backup_id": info["backup_id"]})
+        ).structured_content
+        assert cmp["changes"] == [] and cmp["missing_rules"] == []
+        # nothing differs -> restore writes nothing
+        res = (
+            await c.call_tool(
+                "restore_settings", {"backup_id": info["backup_id"], "user_authorized": True}
+            )
+        ).structured_content
+        assert res["ports_restored"] == [] and res["rules_restored"] == []
+        assert api.writes(PATH_ADD_DEV_MODE) == [] and api.writes(PATH_V2_UPDATE_GROUP) == []
+        # forced full restore writes every port (not port 0) and every rule
+        res = (
+            await c.call_tool(
+                "restore_settings",
+                {"backup_id": info["backup_id"], "only_changed": False, "user_authorized": True},
+            )
+        ).structured_content
+        assert res["ports_restored"] == list(range(1, 9)) and res["rules_restored"] == [
+            2596136,
+            2596144,
+            2596148,
+        ]
+        assert "controller record" in res["skipped"][0]
+        assert (
+            len(api.writes(PATH_ADD_DEV_MODE)) == 8 and len(api.writes(PATH_V2_UPDATE_GROUP)) == 3
+        )
+        assert res["remaining_changes"] == []
+
+
+async def test_rename_port_tool(connect: Connect, api: FakeApi):
+    from acinfinity_mcp.client import PATH_MODE_AND_SETTING
+
+    async with connect() as c:
+        result = await c.call_tool(
+            "rename_port",
+            {"controller_id": AI_ID, "port": 5, "name": "undercanopy", "user_authorized": True},
+        )
+    assert result.is_error is False
+    (query,) = api.writes(PATH_MODE_AND_SETTING)
+    assert query["devName"] == "undercanopy"

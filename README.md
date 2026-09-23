@@ -20,8 +20,10 @@ Uses the same unofficial cloud API as the AC Infinity app, so the controller mus
 |------|-------|
 | Reading controllers, sensors, port settings, automations | ✅ verified live on a Controller AI+ (CTR89Q) and a 69 Pro |
 | Writing port modes / power / timers / triggers | ✅ verified live on the AI+ (mode + timer round trip); standard family follows the Home Assistant integration's proven path |
-| Writing advanced settings (calibration, load type, …) | ⚠️ implemented, accepted by the API, persistence not yet verified |
-| Creating / editing automations | 🚧 next up (endpoints and rule encoding documented in [`docs/api/automations.md`](docs/api/automations.md)) |
+| Backup / compare / restore of the whole configuration | ✅ ports and automation rules; controller record is reported, not written |
+| Renaming ports | ✅ verified live on the AI+ (ports with nothing plugged in are rejected by the controller) |
+| Writing advanced settings (calibration, load type, …) | ⚠️ standard family only (signed `updateAdvSetting`); refused on AI controllers until the app's field-group ids are mapped |
+| Creating / editing automations | 🚧 in-place rule edits and enable/disable are wired (used by restore); create/delete next — see [`docs/api/automations.md`](docs/api/automations.md) |
 
 ## Tools
 
@@ -33,6 +35,10 @@ Uses the same unofficial cloud API as the AC Infinity app, so the controller mus
 | `get_device_settings` | Advanced settings (calibration, load type, dynamic response, …) |
 | `list_automations` | Advance Automation programs: rules per port with mode, power, time window, days, thresholds — the real configuration on AI+ controllers |
 | `get_automations_raw` | Unmodified automation rules + alarms |
+| `backup_settings` | Save every port's mode settings, the controller record, all automation rules and alarms to a local JSON file |
+| `list_backups` / `compare_backup` | List saved backups; show every field that differs between a backup and the device now |
+| `restore_settings` | Write a backup back (changed ports and automation rules), then re-read and report anything still different |
+| `rename_port` | Change the port label shown in the app |
 | `set_port_mode` | Switch a port to Off / On / Auto / Timer / Cycle / Schedule / VPD / … |
 | `set_port_power` | On/off power level 0–10 |
 | `set_port_timer` | Countdown to on / to off |
@@ -61,6 +67,7 @@ Credentials are passed as environment variables — the e‑mail and password of
 | `ACINFINITY_EMAIL` | yes | App login e‑mail |
 | `ACINFINITY_PASSWORD` | yes | App password (only the first 25 characters are used — that's an API limitation) |
 | `ACINFINITY_LOG_LEVEL` | no | `DEBUG`, `INFO` (default), `WARNING`, `ERROR` |
+| `ACINFINITY_BACKUP_DIR` | no | Where `backup_settings` stores its JSON files (default `~/.acinfinity-mcp/backups`) |
 
 ## Client configuration
 

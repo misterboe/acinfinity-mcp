@@ -6,6 +6,7 @@ Endpoint shapes, quirks and write flows: docs/api/. This module knows nothing ab
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import time
@@ -36,6 +37,12 @@ PATH_MODE_AND_SETTING = "/api/dev/modeAndSetting"
 # `version=2.0` path segment is real. Never send `version`/`requestId` headers here (403).
 PATH_V2_GROUPS = "/api/version=2.0/dev/getGroups"
 PATH_V2_ALARMS = "/api/version=2.0/dev/getAlarms"
+PATH_V2_UPDATE_GROUP = "/api/version=2.0/dev/updateGroupsById"
+PATH_V2_TOGGLE_GROUP = "/api/version=2.0/dev/updateGroupsIsOn"
+
+# Version name of the Android build whose request-signing scheme standard controllers
+# (devType 11/18) require for writes — see docs/api/connection.md "Signed writes".
+APP_VERSION = "2.0.8"
 
 # Keys that are sent back verbatim on writes. Kept here (not in models.py) because they are
 # an API contract, not a data model. See docs/api/controls-and-settings.md.
@@ -285,6 +292,23 @@ class RequestFailed(AcInfinityError):
         super().__init__(f"AC Infinity API error {self.code}: {body.get('msg', 'unknown')}")
 
 
+def build_sign(
+    token: str, app_version: str, secret_id: str | None, request_app: str | None, request_id: str
+) -> str:
+    """Request signature of the Android app (md5 chain over token, version, secretId,
+    requestApp and requestId; the body is not covered). Reproduced from the decompiled app
+    by Backroads4Me/homeassistant-acinfinity; required by standard controllers for writes."""
+
+    def md5(value: str) -> str:
+        return hashlib.md5(value.encode("utf-8"), usedforsecurity=False).hexdigest()
+
+    left = md5(token + app_version)
+    right = (
+        md5(secret_id + request_app + request_id) if secret_id and request_app else md5(request_id)
+    )
+    return md5(left + right)
+
+
 def _serialise(
     keys: tuple[str, ...], new: dict[str, Any], existing: dict[str, Any]
 ) -> dict[str, Any]:
@@ -315,6 +339,8 @@ class AcInfinityClient:
         self._email = email
         self._password = password[:PASSWORD_MAX_LEN]
         self._token: str | None = None
+        self._secret_id: str | None = None
+        self._request_app: str | None = None
         self._lock = asyncio.Lock()
         self._device_cache: tuple[float, list[dict[str, Any]]] | None = None
         # devId -> (devType, devPortCount), refreshed with every device list
@@ -331,7 +357,9 @@ class AcInfinityClient:
 
     # ------------------------------------------------------------------ transport
 
-    def _headers(self, *, auth: bool = True, min_version: bool = False) -> dict[str, str]:
+    def _headers(
+        self, *, auth: bool = True, min_version: bool = False, signed: bool = False
+    ) -> dict[str, str]:
         headers: dict[str, str] = {}
         if auth:
             if not self._token:
@@ -339,6 +367,24 @@ class AcInfinityClient:
             headers["token"] = self._token
         if min_version:
             headers["minversion"] = "3.5"
+        if signed:
+            # Standard controllers apply a write only when it is signed like the app's;
+            # v2 endpoints reject these headers, so they are opt-in per call.
+            request_id = str(int(time.time() * 1000))
+            headers.update(
+                {
+                    "requestApp": self._request_app or "",
+                    "version": APP_VERSION,
+                    "requestId": request_id,
+                    "sign": build_sign(
+                        self._token or "",
+                        APP_VERSION,
+                        self._secret_id,
+                        self._request_app,
+                        request_id,
+                    ),
+                }
+            )
         return headers
 
     async def _request(
@@ -363,7 +409,7 @@ class AcInfinityClient:
         return body
 
     async def _authed(
-        self, method: str, path: str, *, data=None, min_version=False
+        self, method: str, path: str, *, data=None, min_version=False, signed=False
     ) -> dict[str, Any]:
         """Authenticated call: re-login on auth loss, exponential backoff on flaky failures."""
         if not self._token:
@@ -372,7 +418,10 @@ class AcInfinityClient:
         for attempt in range(MAX_RETRIES + 1):
             try:
                 return await self._request(
-                    method, path, data=data, headers=self._headers(min_version=min_version)
+                    method,
+                    path,
+                    data=data,
+                    headers=self._headers(min_version=min_version, signed=signed),
                 )
             except RequestFailed as exc:
                 # The API answers with a non-200 body code (not HTTP 401) when the token is stale.
@@ -406,7 +455,10 @@ class AcInfinityClient:
             data={"appEmail": self._email, "appPasswordl": self._password},
             headers=self._headers(auth=False),
         )
-        self._token = str(body["data"]["appId"])
+        data = body["data"]
+        self._token = str(data["appId"])
+        self._secret_id = data.get("secretId")
+        self._request_app = data.get("requestApp")
         log.info("logged in to AC Infinity")
 
     async def list_controllers(self, *, force: bool = False) -> list[dict[str, Any]]:
@@ -454,6 +506,26 @@ class AcInfinityClient:
                 + f"; got {port}"
             )
 
+    async def require_device(self, controller_id: str, port: int) -> None:
+        """Writes to a port with nothing plugged in are rejected by the controller with
+        `999999 Data saving failed` (verified live: rename of an empty port). Fail early."""
+        await self.validate_port(controller_id, port)
+        devices = await self.list_controllers()
+        device = next((d for d in devices if str(d["devId"]) == controller_id), None)
+        entry = next(
+            (
+                p
+                for p in ((device or {}).get("deviceInfo") or {}).get("ports") or []
+                if p.get("port") == port
+            ),
+            None,
+        )
+        if entry and entry.get("online") == 0 and entry.get("portResistance") == 65535:
+            raise AcInfinityError(
+                f"port {port} has no device plugged in; the controller rejects every setting "
+                "write for an empty port (999999). Plug a device in first."
+            )
+
     async def get_port_settings(self, controller_id: str, port: int) -> dict[str, Any]:
         async with self._lock:
             return await self._get_port_settings(controller_id, port)
@@ -496,46 +568,125 @@ class AcInfinityClient:
         `100001`; with a query-string payload the standard family answers 200 but discards the
         write (ober37 Quirks 13/14). Verified live on an AI+ 2026-09-23 (Timer-to-On round trip).
         """
-        await self.validate_port(controller_id, port)
+        await self.require_device(controller_id, port)
         is_ai, _ = await self.describe(controller_id)
         async with self._lock:
             existing = await self._get_port_settings(controller_id, port)
-            payload = _serialise(CONTROL_KEYS, changes, existing)
-            await self._authed("POST", PATH_ADD_DEV_MODE, data=payload, min_version=is_ai)
-            self._device_cache = None
+            await self._post_controls(
+                controller_id, _serialise(CONTROL_KEYS, changes, existing), is_ai
+            )
+
+    async def restore_port_controls(
+        self, controller_id: str, port: int, saved: dict[str, Any]
+    ) -> None:
+        """Write a previously captured getdevModeSettingList object back (backup restore)."""
+        await self.validate_port(controller_id, port)
+        is_ai, _ = await self.describe(controller_id)
+        async with self._lock:
+            payload = _serialise(CONTROL_KEYS, {}, saved)
+            payload["devId"], payload["externalPort"] = controller_id, port
+            await self._post_controls(controller_id, payload, is_ai)
+
+    async def _post_controls(
+        self, controller_id: str, payload: dict[str, Any], is_ai: bool
+    ) -> None:
+        await self._authed(
+            "POST", PATH_ADD_DEV_MODE, data=payload, min_version=is_ai, signed=not is_ai
+        )
+        self._device_cache = None
+
+    async def update_automation_rule(self, rule: dict[str, Any]) -> None:
+        """Write a complete rule object (as returned by getGroups, with its advId) back in place."""
+        controller_id = str(rule["devId"])
+        await self.describe(controller_id)
+        async with self._lock:
+            payload = {k: v for k, v in _serialise(tuple(rule), {}, rule).items()}
+            await self._authed("POST", PATH_V2_UPDATE_GROUP, data=payload)
+
+    async def set_automation_enabled(self, controller_id: str, rule_id: int, enabled: bool) -> None:
+        """updateGroupsIsOn TOGGLES; read first so the call only happens when needed."""
+        is_ai, _ = await self.describe(controller_id)
+        async with self._lock:
+            body = await self._authed("POST", PATH_V2_GROUPS, data={"devId": controller_id})
+            rule = next((r for r in body.get("data") or [] if r.get("advId") == rule_id), None)
+            if rule is None:
+                raise AcInfinityError(f"no automation rule with id {rule_id} on {controller_id}")
+            if (rule.get("isOn") == 1) == enabled:
+                return
+            await self._authed(
+                "POST",
+                PATH_V2_TOGGLE_GROUP,
+                data={"advId": rule_id, "isDel": 0, "isflag": 1},
+                min_version=is_ai,
+            )
 
     async def update_device_settings(
         self, controller_id: str, port: int, device_name: str, changes: dict[str, Any]
     ) -> None:
-        """Read-modify-write of advanced settings (port 0 = controller).
+        """Read-modify-write of advanced settings (port 0 = controller), standard family.
 
-        Standard family: `updateAdvSetting` (form body, HA-verified). AI family: the combined
-        `modeAndSetting` PUT (accepted with 200 in a live no-op test; persistence of setting
-        keys not yet verified).
+        AI controllers are refused: the only known path (a full-object `modeAndSetting` PUT)
+        renamed a port to "0" in a live test because `devSetting.devName` is null there.
+        The app writes AI settings with a minimal `modeAndSetting` PUT whose field-group ids
+        are not fully mapped yet — see docs/api/controls-and-settings.md.
         """
         await self.validate_port(controller_id, port, allow_zero=True)
         is_ai, _ = await self.describe(controller_id)
+        if is_ai:
+            raise AcInfinityError(
+                "advanced settings writes are not supported on AI controllers yet "
+                "(the full-object path corrupts the port name)"
+            )
         async with self._lock:
-            if is_ai:
-                await self._write_ai_mode_and_setting(controller_id, port, changes)
-                return
             body = await self._authed(
                 "POST", PATH_DEV_SETTING, data={"devId": controller_id, "port": port}
             )
             payload = _serialise(SETTING_KEYS, changes, body["data"])
             payload["devName"] = device_name
-            await self._authed("POST", PATH_UPDATE_ADV_SETTING, data=payload)
+            await self._authed("POST", PATH_UPDATE_ADV_SETTING, data=payload, signed=True)
             self._device_cache = None
 
-    async def _write_ai_mode_and_setting(
-        self, controller_id: str, port: int, changes: dict[str, Any]
-    ) -> None:
-        existing = await self._get_port_settings(controller_id, port)
-        flattened = dict(existing.get("devSetting") or {})
-        flattened.update(existing)
-        payload = _serialise(MODE_AND_SETTING_KEYS, changes, flattened)
-        at_type = int(payload.get("atType") or Mode.OFF)
-        payload["modeAndSettingIdStr"] = _MODE_AND_SETTING_ID_STR.get(
-            at_type, _MODE_AND_SETTING_ID_STR_SENSOR
+    async def rename_port(self, controller_id: str, port: int, name: str) -> None:
+        """Rename a port. AI: minimal `modeAndSetting` PUT with `devName` (verified live, it is
+        how the port name was restored after the full-object incident). Standard: the
+        `updateAdvSetting` round trip whose `devName` field the app uses for the same purpose."""
+        await self.require_device(controller_id, port)
+        is_ai, _ = await self.describe(controller_id)
+        if not is_ai:
+            await self.update_device_settings(controller_id, port, name, {})
+            return
+        existing = await self.get_port_settings(controller_id, port)
+        await self.put_mode_fields(
+            controller_id,
+            port,
+            int(existing.get("atType") or Mode.OFF),
+            [17],
+            {"offSpead": existing.get("offSpead") or 0, "devName": name},
         )
-        await self._authed("PUT", f"{PATH_MODE_AND_SETTING}?{urlencode(payload)}", min_version=True)
+
+    async def put_mode_fields(
+        self,
+        controller_id: str,
+        port: int,
+        at_type: int,
+        group_ids: list[int],
+        fields: dict[str, Any],
+    ) -> None:
+        """App-native AI write: `PUT modeAndSetting` carrying ONLY `atType`, the listed
+        field-group ids (`modeAndSettingIdStr`) and the values of every field in those groups.
+        A listed group whose values are missing is reset to defaults by the server
+        (`onSelfSpead` → 0 observed live), so callers must pass the complete group.
+        """
+        await self.require_device(controller_id, port)
+        params = {
+            "devId": controller_id,
+            "port": port,
+            "atType": at_type,
+            "modeAndSettingIdStr": json.dumps(sorted(set(group_ids) | {16}), separators=(",", ":")),
+            **fields,
+        }
+        async with self._lock:
+            await self._authed(
+                "PUT", f"{PATH_MODE_AND_SETTING}?{urlencode(params)}", min_version=True
+            )
+            self._device_cache = None

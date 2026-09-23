@@ -15,7 +15,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from . import __version__
+from . import __version__, backup
 from .client import AcInfinityClient, AcInfinityError
 from .models import (
     SCHEDULE_DISABLED,
@@ -79,6 +79,13 @@ READ = ToolAnnotations(read_only_hint=True, idempotent_hint=True, open_world_hin
 WRITE = ToolAnnotations(
     read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=False
 )
+# Writes a file on this machine, never the device.
+WRITE_LOCAL = ToolAnnotations(
+    read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=False
+)
+BackupId = Annotated[
+    str, Field(pattern=r"^[A-Za-z0-9._-]+$", description="Backup id from backup_settings.")
+]
 
 ControllerId = Annotated[str, Field(description="Controller id (`id` from list_controllers).")]
 PortNo = Annotated[
@@ -220,7 +227,95 @@ async def get_automations_raw(
     return {"rules": rules, "alarms": alarms}
 
 
+# ---------------------------------------------------------------------------- backup tools
+
+
+@mcp.tool(title="Backup settings", annotations=WRITE_LOCAL)
+async def backup_settings(
+    ctx: Context[AppState],
+    controller_id: ControllerId,
+    label: Annotated[
+        str | None, Field(max_length=40, description="Optional tag for the file name.")
+    ] = None,
+) -> backup.BackupInfo:
+    """Save the complete configuration of a controller (every port's mode settings, the
+    controller record, all Advance Automation rules and alarms) to a local JSON file. Nothing
+    on the device changes. Do this before any set_* call; restore_settings undoes changes.
+    """
+    data = await _call(backup.capture(_client(ctx), controller_id, label))
+    return backup.save(data)
+
+
+@mcp.tool(title="List backups", annotations=READ)
+async def list_backups(ctx: Context[AppState]) -> backup.BackupList:
+    """List saved backups (newest first) with their ids for restore_settings/compare_backup."""
+    return backup.list_backups()
+
+
+@mcp.tool(title="Compare backup", annotations=READ)
+async def compare_backup(ctx: Context[AppState], backup_id: BackupId) -> backup.BackupDiff:
+    """Show every configuration field that differs between a backup and the device right now
+    (per port and per automation rule), without changing anything. Use it after write
+    experiments to verify the device is back in its original state.
+    """
+    saved = _load_backup(backup_id)
+    current = await _call(backup.capture(_client(ctx), saved["controller_id"], None))
+    result = backup.diff(saved, current)
+    result.backup_id = backup_id
+    return result
+
+
+@mcp.tool(title="Restore settings", annotations=WRITE)
+async def restore_settings(
+    ctx: Context[AppState],
+    backup_id: BackupId,
+    ports: Annotated[bool, Field(description="Restore per-port mode settings.")] = True,
+    automations: Annotated[bool, Field(description="Restore Advance Automation rules.")] = True,
+    only_changed: Annotated[
+        bool, Field(description="Only write ports/rules that differ from the backup.")
+    ] = True,
+    user_authorized: Authorized = False,
+) -> backup.RestoreResult:
+    """Write a backup back to the device: each changed port's full mode settings and each
+    changed automation rule (in place, by id). The controller record (port 0) and rules that
+    no longer exist are skipped and reported. Afterwards the device is re-read and any
+    remaining differences are returned — an empty `remaining_changes` means fully restored.
+    """
+    _require_auth(user_authorized)
+    saved = _load_backup(backup_id)
+    result = await _call(
+        backup.restore(
+            _client(ctx), saved, ports=ports, automations=automations, only_changed=only_changed
+        )
+    )
+    result.backup_id = backup_id
+    return result
+
+
+def _load_backup(backup_id: str) -> dict[str, Any]:
+    try:
+        return backup.load(backup_id)
+    except ValueError as exc:
+        raise ToolError(str(exc)) from exc
+
+
 # ---------------------------------------------------------------------------- write tools
+
+
+@mcp.tool(title="Rename port", annotations=WRITE)
+async def rename_port(
+    ctx: Context[AppState],
+    controller_id: ControllerId,
+    port: PortNo,
+    name: Annotated[
+        str, Field(min_length=1, max_length=30, description="New port name shown in the app.")
+    ],
+    user_authorized: Authorized = False,
+) -> WriteResult:
+    """Rename a port (the label shown in the AC Infinity app). Does not change any mode or power."""
+    _require_auth(user_authorized)
+    await _call(_client(ctx).rename_port(controller_id, port, name))
+    return WriteResult(controller_id=controller_id, port=port, changed={"devName": name})
 
 
 @mcp.tool(title="Set port mode", annotations=WRITE)

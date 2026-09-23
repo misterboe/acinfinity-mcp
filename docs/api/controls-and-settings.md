@@ -30,6 +30,40 @@ Live no-op experiment on an idle AI+ port (identical values written back):
 | `addDevMode`, payload as **form body**, `minversion: 3.5` | `200 success` |
 | `PUT modeAndSetting?…`, `minversion: 3.5` | `200 success` |
 
+### App-native AI writes: minimal `PUT modeAndSetting` with field groups
+
+The app itself (HA Bruno captures) does **not** send the full object on AI controllers. It PUTs
+only `devId`, `port`, `atType`, `modeAndSettingIdStr` and the fields of the listed groups:
+
+```
+PUT /api/dev/modeAndSetting?devId=…&port=5&atType=4&modeAndSettingIdStr=[16,20,21]&acitveTimerOn=43200
+header minversion: 3.5
+```
+
+Verified live 2026-09-23 (port 5): mode + timer persisted, restored with `atType=1&modeAndSettingIdStr=[16,17]`.
+`modeAndSettingIdStr` is a list of **field-group ids**; observed/derived so far:
+
+| id | fields | evidence |
+|----|--------|----------|
+| 16 | `atType` (always present) | all captures |
+| 17 | `offSpead` | Off capture; rename via `devName` also travels with `[16,17]` |
+| 18 | `onSpead`, `onSelfSpead` | On capture (`onSpeed` in the Bruno file is ignored — the key is `onSpead`); listing 18 **without** `onSelfSpead` reset it to 0 |
+| 19 | `activeHt/devHt/devHtf`, `activeLt/devLt/devLtf`, `activeHh/devHh`, `activeLh/devLh` | Auto capture `[112,16,19,32,98,99]` |
+| 20 / 21 | `acitveTimerOn` / `acitveTimerOff` | Timer, verified live |
+| 22 / 23 / 40 | `activeCycleOn` / `activeCycleOff` / `schedStartTime`+`schedEndtTime` | Cycle/Schedule capture `[16,22,23,40]` |
+| 81 | `activeHtVpd/activeHtVpdNums`, `activeLtVpd/activeLtVpdNums` | VPD capture `[16,81,32,98,99]` |
+| 32, 98, 99, 112 | target/settingMode families (`settingMode`, `vpdSettingMode`, `target*`) — exact split unknown | Auto/VPD captures |
+
+Rules: **a listed group must carry all of its fields** (missing → server default: `onSpead` 10,
+`onSelfSpead` 0); fields of unlisted groups are ignored (timer reset while in Off with `[16,17]`
+was ignored, with `[16,17,20,21]` still ignored — timers only persist while `atType` is 4/5).
+`devName` in the PUT renames the port (used by `rename_port`). **Never send the full flattened
+object** through this endpoint: with `devSetting.devName = null` it renamed a port to "0".
+
+Writes to a port with nothing plugged in (`online 0`, `portResistance 65535`) fail with
+`999999 Data saving failed` on every endpoint (`modeAndSetting`, `updateAdvSetting`); the app
+cannot rename empty ports either.
+
 Persistence check: `{atType: 4, acitveTimerOn: 86400}` → read-back `atType 4`, `remainTime 86400`,
 port stayed off; `{atType: 1}` → read-back Off. **Fields irrelevant to the mode being written are
 silently discarded** (`acitveTimerOn: 0` sent together with `atType: 1` was ignored, the timer value
