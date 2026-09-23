@@ -18,6 +18,8 @@ from acinfinity_mcp.client import (
     PATH_ADD_DEV_MODE,
     PATH_DEV_SETTING,
     PATH_DEVICE_LIST,
+    PATH_EVENT_LOG,
+    PATH_HISTORY,
     PATH_LOGIN,
     PATH_MODE_AND_SETTING,
     PATH_MODE_SETTINGS,
@@ -93,6 +95,20 @@ class FakeApi:
             return envelope(load("getGroups_ai") if form["devId"] == AI_ID else [])
         if path == PATH_V2_ALARMS:
             return envelope([])
+        if path == PATH_HISTORY:
+            assert int(form["time"]) > int(form["endTime"]), "time = newer bound, endTime = older"
+            return envelope(load("dataPage_ai"))
+        if path == PATH_EVENT_LOG:
+            rows = load("eventlog_ai")
+            size = int(form["pageSize"])
+            start = (
+                0
+                if form["id"] == "0"
+                else next(i for i, r in enumerate(rows) if str(r["id"]) == form["id"]) + 1
+            )
+            return envelope(
+                {"rows": rows[start : start + size], "total": len(rows), "validFrom": 0}
+            )
         if path in (PATH_ADD_DEV_MODE, PATH_UPDATE_ADV_SETTING):
             assert not query and form, "writes must carry the payload as form body"
             if form["devId"] == AI_ID and request.headers.get("minversion") != "3.5":

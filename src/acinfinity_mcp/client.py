@@ -34,6 +34,11 @@ PATH_ADD_DEV_MODE = "/api/dev/addDevMode"
 PATH_DEV_SETTING = "/api/dev/getDevSetting"
 PATH_UPDATE_ADV_SETTING = "/api/dev/updateAdvSetting"
 PATH_MODE_AND_SETTING = "/api/dev/modeAndSetting"
+PATH_HISTORY = "/api/log/dataPage"
+PATH_EVENT_LOG = "/api/log/logdataByAll"
+HISTORY_WINDOW = 24 * 3600  # the API refuses larger spans per call
+LOG_CALL_SPACING = 2.5  # seconds; faster bursts answer 999998 "Rate Limiting!"
+RATE_LIMIT_CODE = 999998
 # "Advance Automation" programs and alarms live on the versioned v2 surface. The literal
 # `version=2.0` path segment is real. Never send `version`/`requestId` headers here (403).
 PATH_V2_GROUPS = "/api/version=2.0/dev/getGroups"
@@ -627,6 +632,77 @@ class AcInfinityClient:
         async with self._lock:
             body = await self._authed("POST", PATH_V2_ALARMS, data={"devId": controller_id})
             return body.get("data") or []
+
+    async def _log_call(self, path: str, data: dict[str, Any]) -> dict[str, Any]:
+        """Paced call to the log API; 999998 means rate limiting → wait and retry once more."""
+        for attempt in range(3):
+            try:
+                body = await self._authed("POST", path, data={"appId": self._token, **data})
+                return body.get("data") or {}
+            except RequestFailed as exc:
+                if exc.code != RATE_LIMIT_CODE or attempt == 2:
+                    raise
+                log.info("log API rate limited, waiting %ss", 10 * (attempt + 1))
+                await asyncio.sleep(10 * (attempt + 1))
+        raise AssertionError("unreachable")
+
+    async def get_history_rows(
+        self, controller_id: str, start: int, end: int
+    ) -> list[dict[str, Any]]:
+        """1-minute sensor/port history rows between two unix timestamps (any span; fetched in
+        24 h windows newest-first like the app, paced against the rate limit)."""
+        await self.describe(controller_id)
+        rows: list[dict[str, Any]] = []
+        async with self._lock:
+            newer = end
+            while newer > start:
+                older = max(start, newer - HISTORY_WINDOW)
+                data = await self._log_call(
+                    PATH_HISTORY,
+                    {
+                        "devId": controller_id,
+                        "time": newer,
+                        "endTime": older,
+                        "pageSize": 2000,
+                        "orderDirection": 1,
+                    },
+                )
+                rows.extend(data.get("rows") or [])
+                newer = older
+                if newer > start:
+                    await asyncio.sleep(LOG_CALL_SPACING)
+        return rows
+
+    async def get_event_log(
+        self, controller_id: str, start: int, end: int, *, limit: int = 500
+    ) -> tuple[list[dict[str, Any]], bool]:
+        """Event log entries newest-first, paginated with the `id` cursor.
+
+        Returns (rows, truncated)."""
+        await self.describe(controller_id)
+        rows: list[dict[str, Any]] = []
+        cursor = 0
+        async with self._lock:
+            while len(rows) < limit:
+                page_size = min(1000, limit - len(rows))
+                data = await self._log_call(
+                    PATH_EVENT_LOG,
+                    {
+                        "devId": controller_id,
+                        "id": cursor,
+                        "time": end,
+                        "endTime": start,
+                        "pageSize": page_size,
+                        "orderDirection": 1,
+                    },
+                )
+                page = data.get("rows") or []
+                rows.extend(page)
+                if len(page) < page_size:
+                    return rows, False
+                cursor = page[-1]["id"]
+                await asyncio.sleep(LOG_CALL_SPACING)
+        return rows, True
 
     async def get_device_settings(self, controller_id: str, port: int) -> dict[str, Any]:
         async with self._lock:

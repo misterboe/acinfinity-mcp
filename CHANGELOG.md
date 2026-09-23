@@ -27,6 +27,14 @@ All notable changes to this project are documented here. The format follows
 - Standard-controller writes carry the app's request signature (`sign`/`requestId`/`version`
   headers, algorithm from the decompiled Android app via Backroads4Me's fork).
 
+### Added (history)
+- `get_history`: 1-minute sensor/port history from `log/dataPage` (tent + ambient climate,
+  per-port power from the `portSpead` nibbles, automation flags), fetched in 24 h windows with
+  rate-limit pacing, aggregated into buckets with min/avg/max.
+- `get_event_log`: the app's Logs tab from `log/logdataByAll` with id-cursor pagination and
+  decoding of AI control actions (port, level, trend, reason), AI mode events, user actions,
+  alerts and controller notices per the app's log builders.
+
 ### Added (automations)
 - `rename_automation`: rewrites every rule of a program with the new `advName` via
   `updateGroupsById`, exactly like the app's edit path (non-null fields, raw `sensorModeData`),

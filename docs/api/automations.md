@@ -110,6 +110,9 @@ rule bodies when creating automations.
   app's "24 h" switch) is set, the stored window is ignored** — the rule applies all day. The
   user's live program stores 09:00–17:00 with `switchTime 255` and runs 24/7 (confirmed in the
   app). Never report the window for a continuous rule.
+- "Intelligenter Außenmonitor" (smart outdoor monitor, Auto rules only) is **off** in the app while
+  the same rule has `dualZoneSwitch 1` and `photocellSwitch 0` (screenshot 2026-09-23) — so
+  `dualZoneSwitch` is not that toggle; the field for it is still unknown.
 - Ports driven by a program keep `loadState 0` in `devInfoListAll` even while running (`speak` > 0);
   use `speak` to tell whether the device is on.
 - `cycleOn`/`cycleOff` in seconds (app shows minutes).

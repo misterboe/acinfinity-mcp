@@ -21,12 +21,16 @@ from .models import (
     SCHEDULE_DISABLED,
     AutomationList,
     ControllerList,
+    HistorySeries,
+    LogEvents,
     Mode,
     PortSettings,
     WriteResult,
     celsius_to_fahrenheit,
     decode_automations,
     decode_controller,
+    decode_history,
+    decode_log_event,
     decode_port_settings,
     hhmm_to_minutes,
 )
@@ -225,6 +229,72 @@ async def get_automations_raw(
     rules = await _call(client.get_automations(controller_id))
     alarms = await _call(client.get_alarms(controller_id))
     return {"rules": rules, "alarms": alarms}
+
+
+@mcp.tool(title="Get history", annotations=READ)
+async def get_history(
+    ctx: Context[AppState],
+    controller_id: ControllerId,
+    hours: Annotated[
+        int, Field(ge=1, le=24 * 30, description="How far back from now (1-720 h).")
+    ] = 24,
+    sample_minutes: Annotated[
+        int, Field(ge=1, le=1440, description="Aggregation bucket; 1 = raw 1-minute rows.")
+    ] = 15,
+    end_time: Annotated[
+        int | None, Field(description="Unix timestamp to end at instead of now (seconds).")
+    ] = None,
+) -> HistorySeries:
+    """Sensor and port history: tent climate (probe), ambient climate (onboard sensor, AI
+    controllers), applied power per port and automation-trigger flags, averaged into
+    `sample_minutes` buckets, plus min/avg/max. The cloud keeps 1-minute rows for months;
+    each 24 h costs one API call, so keep hours x resolution reasonable (24 h @ 15 min = 96
+    points). Timestamps are unix seconds; convert with the controller's `timezone`.
+    """
+    import time as _time
+
+    client = _client(ctx)
+    _, port_count = await _call(client.describe(controller_id))
+    end = int(end_time or _time.time())
+    start = end - hours * 3600
+    rows = await _call(client.get_history_rows(controller_id, start, end))
+    return decode_history(
+        controller_id,
+        rows,
+        port_count=port_count,
+        start=start,
+        end=end,
+        sample_minutes=sample_minutes,
+    )
+
+
+@mcp.tool(title="Get event log", annotations=READ)
+async def get_event_log(
+    ctx: Context[AppState],
+    controller_id: ControllerId,
+    days: Annotated[int, Field(ge=1, le=90, description="How far back from now.")] = 7,
+    limit: Annotated[
+        int, Field(ge=1, le=2000, description="Maximum entries (newest first).")
+    ] = 200,
+) -> LogEvents:
+    """The controller's event log (the app's Logs tab): AI control actions per port (level
+    set, increase/decrease, reason such as lower_vpd), AI mode events (started/paused/night
+    mode), user actions, alerts and controller notices. Newest first.
+    """
+    import time as _time
+
+    end = int(_time.time()) + 59
+    start = end - days * 86400
+    rows, truncated = await _call(
+        _client(ctx).get_event_log(controller_id, start, end, limit=limit)
+    )
+    return LogEvents(
+        controller_id=controller_id,
+        start=start,
+        end=end,
+        events=[decode_log_event(r) for r in rows],
+        truncated=truncated,
+    )
 
 
 # ---------------------------------------------------------------------------- backup tools

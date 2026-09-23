@@ -19,6 +19,7 @@ Uses the same unofficial cloud API as the AC Infinity app, so the controller mus
 | Area | State |
 |------|-------|
 | Reading controllers, sensors, port settings, automations | ✅ verified live on a Controller AI+ (CTR89Q) and a 69 Pro |
+| History (1-min rows, ≥ 90 days) and event log | ✅ verified live, rate-limit aware |
 | Writing port modes / power / timers / triggers | ✅ verified live on the AI+ (mode + timer round trip); standard family follows the Home Assistant integration's proven path |
 | Backup / compare / restore of the whole configuration | ✅ ports and automation rules; controller record is reported, not written |
 | Renaming ports | ✅ verified live on the AI+ (ports with nothing plugged in are rejected by the controller) |
@@ -34,6 +35,8 @@ Uses the same unofficial cloud API as the AC Infinity app, so the controller mus
 | `get_port_settings` | Decoded mode configuration of one port: on/off power, auto & VPD triggers, timers, cycle, schedule |
 | `get_port_settings_raw` | Unmodified API object incl. advanced settings (`port=0` = controller) |
 | `get_device_settings` | Advanced settings (calibration, load type, dynamic response, …) |
+| `get_history` | Sensor & port history (1-minute cloud rows, months of retention) aggregated to any resolution with min/avg/max |
+| `get_event_log` | The app's Logs tab: AI control actions per port with reason, AI mode events, user actions, alerts, controller notices |
 | `list_automations` | Advance Automation programs: rules per port with mode, power, time window, days, thresholds — the real configuration on AI+ controllers |
 | `get_automations_raw` | Unmodified automation rules + alarms |
 | `backup_settings` | Save every port's mode settings, the controller record, all automation rules and alarms to a local JSON file |

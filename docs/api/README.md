@@ -15,6 +15,7 @@ There is no official documentation. Field names are misspelled in places (`appPa
 | [data-model.md](data-model.md) | JSON returned by the device list: controller, ports, sensors, enums, value scaling |
 | [controls-and-settings.md](controls-and-settings.md) | Writable keys (mode, speed, triggers, advanced settings), ranges, scaling, and the read-modify-write flows per controller family |
 | [automations.md](automations.md) | Advance Automation programs & alarms on the `/api/version=2.0/` surface — where AI-controller configuration actually lives |
+| [history.md](history.md) | Sensor history (`log/dataPage`) and event log (`log/logdataByAll`): parameters, retention, rate limiting, event decoding |
 | [app-endpoints.md](app-endpoints.md) / [app-endpoints.json](app-endpoints.json) | **The complete list**: all 179 method+path declarations of the Android app 2.0.8 with parameters, headers and return types, grouped by area |
 
 Further reverse-engineering references: [ober37/ac-infinity-mcp](https://github.com/ober37/ac-infinity-mcp)

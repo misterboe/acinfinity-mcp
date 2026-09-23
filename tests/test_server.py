@@ -20,6 +20,8 @@ def connect(api: FakeApi, monkeypatch) -> Connect:
     (anyio cancel scopes refuse to be closed from a different task than they were opened in)."""
     monkeypatch.setenv(server.ENV_EMAIL, "me@example.com")
     monkeypatch.setenv(server.ENV_PASSWORD, "secret")
+    monkeypatch.setattr("acinfinity_mcp.client.LOG_CALL_SPACING", 0)
+    monkeypatch.setattr("acinfinity_mcp.client.WRITE_SPACING", 0)
     fake = AcInfinityClient("me@example.com", "secret", transport=httpx2.MockTransport(api.handler))
     monkeypatch.setattr(server, "AcInfinityClient", lambda *a, **k: fake)
 
@@ -166,3 +168,40 @@ async def test_rename_port_tool(connect: Connect, api: FakeApi):
     assert result.is_error is False
     (query,) = api.writes(PATH_MODE_AND_SETTING)
     assert query["devName"] == "undercanopy"
+
+
+async def test_get_history_aggregates_and_summarises(connect: Connect):
+    async with connect() as c:
+        result = await c.call_tool(
+            "get_history", {"controller_id": AI_ID, "hours": 1, "sample_minutes": 10}
+        )
+    assert result.is_error is False
+    data = result.structured_content
+    assert data["raw_rows"] == 5 and 1 <= len(data["points"]) <= 2
+    point = data["points"][0]
+    assert point["tent"]["temperature_c"] and point["ambient"]["temperature_c"]
+    assert point["port_power"]["1"] == 3 and point["port_power"]["2"] == 6  # portSpead 0x63 nibbles
+    assert "tent_temperature_c" in data["summary"] and data["summary"]["tent_vpd_kpa"]["max"] > 1
+
+
+async def test_get_event_log_decodes_ai_actions(connect: Connect, api: FakeApi):
+    async with connect() as c:
+        result = await c.call_tool(
+            "get_event_log", {"controller_id": AI_ID, "days": 7, "limit": 25}
+        )
+    data = result.structured_content
+    assert len(data["events"]) == 25 and data["truncated"] is True
+    kinds = {e["category"] for e in data["events"]}
+    assert "ai_control" in kinds
+    ctrl = next(e for e in data["events"] if e["category"] == "ai_control")
+    assert ctrl["port"] and ctrl["reason"] in {
+        "lower_vpd",
+        "raise_vpd",
+        "efficiency",
+        "lower_temperature",
+        "raise_temperature",
+        None,
+    }
+    from acinfinity_mcp.client import PATH_EVENT_LOG
+
+    assert len(api.writes(PATH_EVENT_LOG)) == 1  # limit 25 -> single page

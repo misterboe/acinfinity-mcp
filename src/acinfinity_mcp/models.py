@@ -695,3 +695,263 @@ def decode_automations(
         programs=list(dict.fromkeys(r.program for r in rules)),
         rules=rules,
     )
+
+
+# ------------------------------------------------------------------------- History & logs
+
+
+class HistoryPoint(BaseModel):
+    time: int = Field(description="Unix timestamp (seconds) of the sample.")
+    tent: Climate | None = Field(default=None, description="Probe climate (inside the tent).")
+    ambient: Climate | None = Field(
+        default=None, description="Onboard-sensor climate (controller housing); AI controllers."
+    )
+    port_power: dict[int, int] = Field(
+        default_factory=dict, description="Applied power level 0-10 per port (from portSpead)."
+    )
+    automation_ports: list[int] = Field(
+        default_factory=list, description="Ports whose automation was triggering (portStatus bits)."
+    )
+    samples: int = Field(default=1, description="Raw 1-minute rows aggregated into this point.")
+
+
+class HistorySeries(BaseModel):
+    controller_id: str
+    start: int
+    end: int
+    sample_minutes: int
+    raw_rows: int = Field(description="1-minute rows fetched from the API before aggregation.")
+    points: list[HistoryPoint]
+    summary: dict[str, dict[str, float]] = Field(
+        description="min/avg/max per series (tent_temperature_c, tent_humidity_pct, ...)."
+    )
+
+
+def _decode_history_row(row: dict[str, Any], port_count: int) -> HistoryPoint:
+    sensors = [s for s in (_decode_sensor(x) for x in row.get("sensors") or []) if s]
+    if sensors:
+        tent = _climate_from_sensors(sensors, LOCATION_PROBE)
+        ambient = _climate_from_sensors(sensors, LOCATION_ONBOARD)
+    else:
+        tent = Climate(
+            temperature_c=_hundredths(row.get("temperature")),
+            humidity_pct=_hundredths(row.get("humidity")),
+            vpd_kpa=_hundredths(row.get("vpdNums", row.get("vpdnums"))),
+        )
+        ambient = None
+    speads = int(row.get("portSpead") or 0)
+    status = int(row.get("portStatus") or 0)
+    return HistoryPoint(
+        time=int(row["createTime"]),
+        tent=tent,
+        ambient=ambient,
+        port_power={p: (speads >> (4 * (p - 1))) & 0xF for p in range(1, port_count + 1)},
+        automation_ports=[p for p in range(1, port_count + 1) if status & (1 << (p - 1))],
+    )
+
+
+def _mean(values: list[float]) -> float | None:
+    return round(sum(values) / len(values), 2) if values else None
+
+
+def _aggregate(points: list[HistoryPoint]) -> HistoryPoint:
+    def clim(attr: str) -> Climate | None:
+        cs = [getattr(p, attr) for p in points if getattr(p, attr) is not None]
+        if not cs:
+            return None
+        return Climate(
+            temperature_c=_mean([c.temperature_c for c in cs if c.temperature_c is not None]),
+            humidity_pct=_mean([c.humidity_pct for c in cs if c.humidity_pct is not None]),
+            vpd_kpa=_mean([c.vpd_kpa for c in cs if c.vpd_kpa is not None]),
+        )
+
+    ports = sorted({p for pt in points for p in pt.port_power})
+    return HistoryPoint(
+        time=points[0].time,
+        tent=clim("tent"),
+        ambient=clim("ambient"),
+        port_power={
+            p: round(_mean([pt.port_power.get(p, 0) for pt in points]) or 0) for p in ports
+        },
+        automation_ports=sorted({p for pt in points for p in pt.automation_ports}),
+        samples=len(points),
+    )
+
+
+def decode_history(
+    controller_id: str,
+    rows: list[dict[str, Any]],
+    *,
+    port_count: int,
+    start: int,
+    end: int,
+    sample_minutes: int,
+) -> HistorySeries:
+    raw = sorted((_decode_history_row(r, port_count) for r in rows), key=lambda p: p.time)
+    bucket = max(sample_minutes, 1) * 60
+    groups: dict[int, list[HistoryPoint]] = {}
+    for p in raw:
+        groups.setdefault(p.time - (p.time % bucket), []).append(p)
+    points = [_aggregate(g) if len(g) > 1 else g[0] for _, g in sorted(groups.items())]
+    for pt, key in zip(points, sorted(groups), strict=True):
+        pt.time = key
+    summary: dict[str, dict[str, float]] = {}
+    for scope in ("tent", "ambient"):
+        for attr in ("temperature_c", "humidity_pct", "vpd_kpa"):
+            values = [
+                getattr(getattr(p, scope), attr)
+                for p in raw
+                if getattr(p, scope) is not None and getattr(getattr(p, scope), attr) is not None
+            ]
+            if values:
+                summary[f"{scope}_{attr}"] = {
+                    "min": min(values),
+                    "avg": _mean(values) or 0,
+                    "max": max(values),
+                }
+    return HistorySeries(
+        controller_id=controller_id,
+        start=start,
+        end=end,
+        sample_minutes=sample_minutes,
+        raw_rows=len(rows),
+        points=points,
+        summary=summary,
+    )
+
+
+# Event log (logdataByAll). Decoding follows the app's Log builders (protocol/a.java,
+# NetLog.toLog04): logType 2 = alert, 3 = AI, 4 = mode/automation info, 5 = controller info.
+_AI_REASONS = {
+    1: "raise_temperature",
+    2: "lower_temperature",
+    3: "raise_humidity",
+    4: "lower_humidity",
+    5: "raise_vpd",
+    6: "lower_vpd",
+    7: "co2",
+    8: "efficiency",
+    9: "raise_temp_and_humidity",
+    10: "lower_temp_and_humidity",
+    11: "raise_temp_lower_humidity",
+    12: "lower_temp_raise_humidity",
+}
+_AI_MODE_EVENTS = {
+    0: "ai_paused",
+    1: "ai_started",
+    2: "ai_resumed",
+    3: "ai_deleted",
+    4: "tentwork_activated",
+    5: "tentwork_ended",
+    6: "unfavorable_environment",
+    7: "extreme_conditions",
+    8: "unfavorable_environment",
+    9: "extreme_conditions",
+    10: "unfavorable_humidity",
+    11: "clip_fan_setting_changed",
+    16: "night_mode_enabled",
+    17: "night_mode_disabled",
+}
+_AI_USER_ACTIONS = {
+    1: "target_range_updated",
+    2: "schedule_updated",
+    3: "light_schedule_updated",
+    4: "port_device_type_changed",
+    5: "port_added_or_removed",
+    6: "sensor_connection_changed",
+    7: "dynamic_light_schedule",
+}
+_CONTROLLER_INFO = {
+    0: "co2_over_5000ppm_devices_paused",
+    1: "power_protection_shut_off_outlet",
+    2: "low_water_detected",
+    3: "builtin_clip_fan_lost",
+    4: "builtin_fan_lost",
+    5: "builtin_grow_light_lost",
+    6: "builtin_sensor_lost",
+    7: "carbon_filter_alert",
+}
+
+
+class LogEvent(BaseModel):
+    time: int = Field(description="Unix timestamp (seconds).")
+    log_id: str
+    category: str = Field(
+        description="ai_control | ai_user_action | ai_mode | alert | mode_info | controller_info"
+    )
+    event: str = Field(description="Machine-readable event name (see docs/api/history.md).")
+    port: int | None = None
+    level: int | None = Field(default=None, description="Power level the AI set (ai_control).")
+    trend: str | None = Field(default=None, description="'increase' / 'decrease' for ai_control.")
+    reason: str | None = None
+    details: dict[str, Any] = Field(
+        default_factory=dict, description="Remaining non-zero API fields for this entry."
+    )
+
+
+def decode_log_event(raw: dict[str, Any]) -> LogEvent:
+    log_type, business = raw.get("logType"), raw.get("businessType")
+    port = raw.get("portSelection") or None
+    level = trend = reason = None
+    if log_type == 3 and business == 1:
+        category, event = "ai_control", "ai_set_port"
+        level = raw.get("mlVariation")
+        trend = {1: "decrease", 2: "increase"}.get(raw.get("mlVariationTrend"))
+        reason = _AI_REASONS.get(raw.get("pauseReason"))
+    elif log_type == 3 and business == 2:
+        category = "ai_user_action"
+        event = _AI_USER_ACTIONS.get(
+            raw.get("mlVariationType"), f"user_action_{raw.get('mlVariationType')}"
+        )
+    elif log_type == 3 and business == 3:
+        category = "ai_mode"
+        event = _AI_MODE_EVENTS.get(
+            raw.get("mlVariationType"), f"ai_mode_{raw.get('mlVariationType')}"
+        )
+    elif log_type == 2:
+        category, event = "alert", f"alert_business_{business}"
+    elif log_type == 4:
+        category, event = "mode_info", f"mode_{raw.get('currentMode')}_business_{business}"
+    elif log_type == 5:
+        category, event = (
+            "controller_info",
+            _CONTROLLER_INFO.get(business, f"controller_{business}"),
+        )
+    else:
+        category, event = "unknown", f"type_{log_type}_business_{business}"
+    skip = {
+        "appId",
+        "devId",
+        "devMacAddr",
+        "logId",
+        "id",
+        "logTime",
+        "logType",
+        "logFormat",
+        "businessType",
+        "portSelection",
+        "mlVariation",
+        "mlVariationTrend",
+        "pauseReason",
+        "mlVariationType",
+    }
+    details = {k: v for k, v in raw.items() if k not in skip and v not in (None, 0, "", False)}
+    return LogEvent(
+        time=int(raw.get("logTime") or 0),
+        log_id=str(raw.get("logId") or raw.get("id")),
+        category=category,
+        event=event,
+        port=port,
+        level=level,
+        trend=trend,
+        reason=reason,
+        details=details,
+    )
+
+
+class LogEvents(BaseModel):
+    controller_id: str
+    start: int
+    end: int
+    events: list[LogEvent]
+    truncated: bool = Field(description="True when more events exist than `limit` allowed.")
